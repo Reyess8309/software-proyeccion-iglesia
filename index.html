@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Panel de Control</title>
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self'">
+    <style>
+        /* --- ESTILOS DE CUERPO --- */ 
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #f0f0f0;
+        }
+
+        /* --- MENÚ LATERAL LADO IZQUIERDA --- */
+        .sidebar {
+            width: 60px;
+            background-color: #0078d4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 15px;
+        }
+        .sidebar-icon {
+            font-size: 24px;
+            color: white;
+            padding: 10px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        .sidebar-icon:hover {
+            background-color: #005a9e;
+        }
+
+        /* --- CONTENEDOR PRINCIPAL (PANEL + BARRA INFERIOR) --- */
+        .main-container {
+            flex: 1; 
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Evita que la pantalla completa se deforme */
+        }
+
+        /* --- ÁREA DE TRABAJO (CENTRO) --- */
+        .content-area {
+            flex: 1; 
+            display: flex;
+            padding: 10px;
+            gap: 10px;
+            min-height: 0;
+        }
+
+        /* --- COLUMNAS --- */
+        .column {
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            padding: 10px;
+            overflow-y: auto;
+
+            display: flex; 
+            flex-direction: column; /* Todo se apila hacia abajo */
+            flex: 1; /* Se reparten el espacio equitativamente */
+        }
+
+        #col-books    { flex: 1; }
+        #col-chapters { flex: 1; }
+        #col-verses   { flex: 1; }
+        #col-background { flex: 1; }
+
+        .column h3 {
+            margin: 0 0 10px 0;
+            border-bottom: 2px solid #ccc;
+            padding-bottom: 5px;
+        }
+
+        /* --- BARRA INFERIOR --- */
+        .bottom-bar {
+            height: 60px;
+            background-color: #ffffff;
+            border-top: 1px solid #ccc;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            gap: 20px;
+        }
+        .bottom-bar button {
+            padding: 8px 15px;
+            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            background-color: #0078d4;
+            color: white;
+            cursor: pointer;
+        }
+        .bottom-bar button:hover {
+            background-color: #005a9e;
+        }
+
+    </style>
+</head>
+<body>
+
+    <nav class="sidebar">
+        <!-- Agregamos IDs (nav-bible y nav-songs) y el cursor de "mano" -->
+        <div class="sidebar-icon" id="nav-bible" style="cursor: pointer; background-color: rgba(255,255,255,0.2);">📖</div> 
+        <div class="sidebar-icon" id="nav-songs" style="cursor: pointer;">🎶</div> 
+        <div class="sidebar-icon">🎬</div> 
+        <div class="sidebar-icon">⚙️</div> 
+    </nav>
+
+    <div class="main-container">
+        <main class="content-area">
+
+            <!-- 1. COLUMNAS DE BIBLIA -->
+            <div class="column" id="col-books">
+                <h3>Libros</h3>
+                <select id="versionSelect" style="width: 100%; margin-bottom: 10px; padding: 5px; font-size: 16px; border-radius: 5px;">
+                    <option>Cargando versiones...</option>
+                </select>
+                <div id="books-list" style="overflow-y: auto; flex: 1;"></div>
+            </div>
+            
+            <div class="column" id="col-chapters"></div>
+            
+            <div class="column" id="col-verses"></div>
+
+
+            <!-- 2. NUEVAS COLUMNAS DE CANCIONES (Ocultas por defecto) -->
+            <div class="column" id="col-songs" style="display: none;">
+                <h3>Cancionero</h3>
+                <button id="btnNewSong" style="width: 100%; padding: 10px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; margin-bottom: 15px; font-weight: bold;">➕ Añadir Canción</button>
+                <div id="songs-list" style="overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 5px;"></div>
+            </div>
+
+            <div class="column" id="col-stanzas" style="display: none;">
+                <h3 id="songTitleDisplay">Letra</h3>
+                <div id="stanzas-list" style="overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 5px;"></div>
+            </div>
+
+
+            <!-- 3. CONTROLES, Ultima columna siempre visible -->
+            <div class="column" id="col-controls">
+                <!-- Botón que agregamos antes para limpiar texto -->
+
+                <h3>Fondo de Pantalla</h3>
+                <label>Color de fondo:</label>
+                <input type="color" id="bgColor" value="#000000" style="width: 100%; height: 40px; margin-bottom: 15px; cursor: pointer;">
+
+                <label>Añadir imágenes a la colección:</label>
+                <button id="bgMediaBtn" style="width: 100%; padding: 8px; margin-bottom: 10px; cursor: pointer;">Cargar Imágenes y Videos...</button>
+                
+                <div id="bgGallery" style="display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 15px; max-height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 5px; border-radius: 5px;">
+                </div>
+
+                <button id="clearBgButton" style="width: 100%; padding: 8px;">Quitar Imagen</button>
+            </div>
+        </main>
+
+        <footer class="bottom-bar">
+            <button id="openButton">Abrir Proyección</button>
+            <input type="text" id="textInput" placeholder="Enviar texto rápido...">
+            <button id="sendButton">Enviar</button>
+            <button id="clearTextBtn" style="background-color: #dc3545; color: white; font-weight: bold; font-size: 16px; border: none; border-radius: 5px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    Quitar Texto
+                </button>
+            <button id="btnTextSettings">Ajustes Rápidos</button>
+        </footer>
+    </div>
+
+    <!-- VENTANA MODAL PARA GUARDAR CANCIONES -->
+    <div id="modalAddSong" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center;">
+        <div style="background: white; padding: 20px; border-radius: 10px; width: 600px; max-width: 90%; color: black;">
+            <h2 style="margin-top: 0;">Nueva Canción</h2>
+            <input type="text" id="songTitleInput" placeholder="Título de la canción..." style="width: 100%; padding: 10px; margin-bottom: 10px; font-size: 16px; border: 1px solid #ccc; border-radius: 5px;">
+            <textarea id="songLyricsInput" placeholder="Escribe la letra aquí...&#10;Presiona 'Enter' dos veces para separar las estrofas/párrafos." style="width: 100%; height: 300px; padding: 10px; font-size: 14px; margin-bottom: 15px; resize: none; border: 1px solid #ccc; border-radius: 5px;"></textarea>
+            <div style="display: flex; gap: 10px;">
+                <button id="btnSaveSong" style="flex: 1; padding: 12px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Guardar Canción</button>
+                <button id="btnCancelSong" style="flex: 1; padding: 12px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Ajustes Rápidos de Texto -->
+    <div id="modalTextSettings" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center;">
+        <div style="background: #fff; padding: 20px; border-radius: 8px; width: 350px; display: flex; flex-direction: column; gap: 15px; color: black;">
+            <h3 style="margin: 0; border-bottom: 1px solid #ccc; padding-bottom: 10px;">Ajustes de Texto</h3>
+            
+            <div>
+                <label><strong>Tamaño de texto:</strong> <span id="fontSizeValue">6vw</span></label><br>
+                <input type="range" id="fontSizeSlider" min="2" max="10" value="6" step="0.5" style="width: 100%;">
+            </div>
+
+            <div>
+                <label><strong>Color de texto:</strong></label><br>
+                <input type="color" id="textColorPicker" value="#ffffff" style="width: 100%; height: 40px; border: none; cursor: pointer;">
+            </div>
+
+            <div>
+                <label><strong>Grosor del borde negro:</strong></label><br>
+                <input type="range" id="textShadowSlider" min="0" max="10" value="4" style="width: 100%;">
+            </div>
+
+            <div>
+                <label><strong>Ubicación en pantalla:</strong></label><br>
+                <select id="textAlignSelect" style="width: 100%; padding: 5px;">
+                    <option value="flex-start">Arriba</option>
+                    <option value="center" selected>Medio</option>
+                    <option value="flex-end">Abajo</option>
+                </select>
+            </div>
+            
+            <button id="btnCloseSettings" style="padding: 10px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px;">Cerrar Ajustes</button>
+        </div>
+    </div>
+
+
+    <script src="./renderer.js"></script>
+</body>
+</html>

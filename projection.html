@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Proyección</title>
+        <meta http-equiv="Content-Security-Policy" content="script-src 'self'">
+    <style>
+        #text-container {
+            width: 90%; /* Máximo ancho permitido en la pantalla */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        body {
+            background-color: black;
+            color: white;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            overflow: hidden; /* Oculta barras de scroll */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh; /* Ocupa el 100% del alto de la ventana */
+            flex-direction: column;
+        }
+
+        #content {
+            /* Mantenemos los márgenes y el centrado */
+            width: 90%; 
+            text-align: center;
+            
+            /* Hacemos que los párrafos se vean simétricos */
+            text-wrap: balance;
+            
+            /* Le prohibimos romper palabras a la mitad */
+            word-break: normal; 
+            overflow-wrap: normal;
+            
+            /*Espacio entre líneas de texto */
+            line-height: 1.2; 
+        }
+
+        /* --- ESTILO PARA LA CITA BÍBLICA --- */
+        #citation {
+            color: #ffcc00; /* Color dorado */
+            font-style: italic; /* Texto en cursiva */
+            text-align: right; /* Alineado a la derecha */
+            width: 90%;
+            margin-top: 15px;
+            font-weight: bold;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.8); /* Sombrita para que se lea siempre */
+        }
+    </style>
+</head>
+<body>
+    <video 
+        id="bgVideo" autoplay loop muted style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: -1;">
+    </video>
+    
+    <div id="text-container">
+        <h1 id="content">PANTALLA</h1>
+        <div id="citation"></div>
+    </div>
+
+    <script src="./projection-renderer.js"></script>
+</body>
+</html>
