@@ -177,3 +177,14 @@ ipcMain.on('change-logo', (event, logoData) => {
         projectionWindow.webContents.send('update-logo', logoData);
     }
 });
+
+ipcMain.on('set-video-loop', (event, loopValue) => {
+    if (projectionWindow) projectionWindow.webContents.send('update-video-loop', loopValue);
+});
+
+ipcMain.on('start-countdown', (event, data) => {
+    if (projectionWindow) projectionWindow.webContents.send('start-countdown', data);
+});
+ipcMain.on('stop-countdown', (event) => {
+    if (projectionWindow) projectionWindow.webContents.send('stop-countdown');
+});

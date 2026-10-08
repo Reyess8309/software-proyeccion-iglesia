@@ -106,9 +106,9 @@
         <!-- Agregamos IDs (nav-bible y nav-songs) y el cursor de "mano" -->
         <div class="sidebar-icon" id="nav-bible" style="cursor: pointer; background-color: rgba(255,255,255,0.2);">📖</div> 
         <div class="sidebar-icon" id="nav-songs" style="cursor: pointer;">🎶</div> 
-        <div class="sidebar-icon">🎬</div>
-        <div id="nav-logo" style="padding: 10px; cursor: pointer; color: white;">🖼️</div>
-        <div class="sidebar-icon">⚙️</div> 
+        <div class="sidebar-icon" id="nav-multimedia" style="padding: 10px; cursor: pointer; color: white;">🎬</div>
+        <div class="sidebar-icon" id="nav-logo" style="padding: 10px; cursor: pointer; color: white;">🖼️</div>
+        <div class="sidebar-icon" id="nav-resources" style="padding: 10px; cursor: pointer; color: white;">🛠️</div>
     </nav>
 
     <div class="main-container">
@@ -169,6 +169,71 @@
                 </div>
             </div>
 
+            <div id="col-multimedia" style="display: none; flex-direction: column; padding: 20px; color: black; background: #ffffff; flex: 1; border-radius: 8px; overflow-y: auto;">
+                <h2 style="margin-top:0;">Galería Multimedia</h2>
+
+                <div style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center;">
+                    <button id="btnAddMedia" style="padding: 10px; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 5px; font-weight: bold;">+ Agregar Archivo</button>
+
+                    <label style="margin-left: auto; font-weight: bold; cursor: pointer;">
+                        <input type="checkbox" id="chkVideoLoop" checked style="transform: scale(1.3); margin-right: 5px;"> Repetir Videos (Loop)
+                    </label>
+                </div>
+
+                <!-- Pestañas -->
+                <div style="display: flex; gap: 10px; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 15px;">
+                    <button id="tabVideos" style="padding: 5px 15px; background: #333; color: white; border: none; border-radius: 5px; cursor: pointer;">Videos</button>
+                    <button id="tabImages" style="padding: 5px 15px; background: #eee; color: black; border: none; border-radius: 5px; cursor: pointer;">Imágenes</button>
+                </div>
+
+                <!-- Cuadrícula donde aparecerán los archivos -->
+                <div id="mediaGallery" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 15px;">
+                    <!-- Aquí se inyectarán las cajitas con JavaScript -->
+                </div>
+            </div>
+
+            <div id="col-resources" style="display: none; flex-direction: column; padding: 20px; color: black; background: #ffffff; flex: 1; border-radius: 8px;">
+                <h2 style="margin-top:0;">Recursos y Utilidades</h2>
+
+                <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                    <!-- CUENTA REGRESIVA -->
+                    <div style="flex: 1; min-width: 250px; background: #f8f9fa; padding: 15px; border-radius: 5px; border: 1px solid #ccc;">
+                        <h3 style="margin-top:0;">⏳ Cuenta Regresiva</h3>
+                        <label>Texto superior (Opcional):</label><br>
+                        <input type="text" id="countdownPrefix" value="Iniciamos en " style="width: 100%; padding: 5px; margin-bottom: 10px; box-sizing: border-box;">
+
+                        <label>Minutos:</label><br>
+                        <input type="number" id="countdownMinutes" value="5" min="1" style="width: 100%; padding: 5px; margin-bottom: 15px; box-sizing: border-box;">
+
+                        <div style="display: flex; gap: 10px;">
+                            <button id="btnStartTimer" style="flex: 1; padding: 10px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">▶ Iniciar</button>
+                            <button id="btnStopTimer" style="flex: 1; padding: 10px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">⏹ Detener</button>
+                        </div>
+                    </div>
+
+                    <!-- NOTAS RÁPIDAS -->
+                    <div style="flex: 1; min-width: 250px; background: #f8f9fa; padding: 15px; border-radius: 5px; border: 1px solid #ccc;">
+                        <h3 style="margin-top:0;">📌 Notas Rápidas</h3>
+
+                        <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+                            <input type="text" id="note1" placeholder="Ej: Favor de mover vehículo rojo XYZ..." style="flex: 1; padding: 5px;">
+                            <button id="btnNote1" style="padding: 5px 15px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer;">Proyectar</button>
+                        </div>
+                        <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+                            <input type="text" id="note2" placeholder="Nota 2..." style="flex: 1; padding: 5px;">
+                            <button id="btnNote2" style="padding: 5px 15px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer;">Proyectar</button>
+                        </div>
+                        <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+                            <input type="text" id="note3" placeholder="Nota 3..." style="flex: 1; padding: 5px;">
+                            <button id="btnNote3" style="padding: 5px 15px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer;">Proyectar</button>
+                        </div>
+                        <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+                            <input type="text" id="note4" placeholder="Nota 4..." style="flex: 1; padding: 5px;">
+                            <button id="btnNote4" style="padding: 5px 15px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer;">Proyectar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <!-- 3. CONTROLES, Ultima columna siempre visible -->
             <div class="column" id="col-controls">

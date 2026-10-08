@@ -20,4 +20,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     onUpdateDimmer: (callback) => ipcRenderer.on('update-dimmer', (event, opacity) => callback(opacity)),
 
     onUpdateLogo: (callback) => ipcRenderer.on('update-logo', (event, logoData) => callback(logoData)),
+
+    onUpdateVideoLoop: (callback) => ipcRenderer.on('update-video-loop', (event, loopValue) => callback(loopValue)),
+
+    onStartCountdown: (callback) => ipcRenderer.on('start-countdown', (event, data) => callback(data)),
+    onStopCountdown: (callback) => ipcRenderer.on('stop-countdown', () => callback()),
 });

@@ -35,4 +35,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   changeDimmer: (opacity) => ipcRenderer.send('change-dimmer', opacity),
 
   changeLogo: (logoData) => ipcRenderer.send('change-logo', logoData),
+
+  setVideoLoop: (loopValue) => ipcRenderer.send('set-video-loop', loopValue),
+
+  startCountdown: (data) => ipcRenderer.send('start-countdown', data),
+  stopCountdown: () => ipcRenderer.send('stop-countdown'),
 });

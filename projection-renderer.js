@@ -25,6 +25,7 @@ function fitText() {
 }
 
 window.electronAPI.onReceiveText((data) => {
+    if (typeof countdownInterval !== 'undefined') clearInterval(countdownInterval);
     if (typeof data === 'object') {
         content.textContent = data.texto;
         citationDiv.textContent = data.cita;
@@ -145,4 +146,58 @@ window.electronAPI.onUpdateLogo((data) => {
         logo.style.bottom = margen;
         logo.style.right = margen;
     }
+});
+
+// ==========================================
+// CONTROL DE VIDEO LOOP
+// ==========================================
+window.electronAPI.onUpdateVideoLoop((isLoop) => {
+    const video = document.getElementById('bgVideo');
+    if (video) {
+        video.loop = isLoop;
+    }
+});
+
+// ==========================================
+// CONTROL DE CUENTA REGRESIVA
+// ==========================================
+let countdownInterval;
+
+window.electronAPI.onStartCountdown((data) => {
+    // Si había otro reloj o texto, lo limpiamos
+    clearInterval(countdownInterval);
+    citationDiv.style.display = 'none'; 
+    
+    // Calculamos a qué hora exacta termina (Hora actual + minutos en milisegundos)
+    const targetTime = Date.now() + (data.minutes * 60000);
+    
+    function updateTimer() {
+        const remaining = targetTime - Date.now();
+        
+        if (remaining <= 0) {
+            clearInterval(countdownInterval);
+            content.textContent = data.prefix + " 00:00";
+            return;
+        }
+        
+        // Convertir milisegundos a minutos y segundos
+        const mins = Math.floor(remaining / 60000);
+        const secs = Math.floor((remaining % 60000) / 1000);
+        
+        // Formatear a 2 dígitos (ej. 05:09)
+        const formatMins = mins.toString().padStart(2, '0');
+        const formatSecs = secs.toString().padStart(2, '0');
+        
+        // Proyectar el texto
+        content.textContent = `${data.prefix} ${formatMins}:${formatSecs}`;
+        fitText();
+    }
+    
+    updateTimer(); // Ejecutamos la primera vez inmediatamente
+    countdownInterval = setInterval(updateTimer, 1000); // Luego cada 1 segundo
+});
+
+window.electronAPI.onStopCountdown(() => {
+    clearInterval(countdownInterval);
+    content.textContent = "";
 });

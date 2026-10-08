@@ -33,73 +33,88 @@ if (clearTextButton) {
 
 
 // ==========================================
-// FUNCIONAMIENTO GENERAL DE LA PANTALLA
+// NAVEGACIÓN DEL MENÚ LATERAL (OPTIMIZADA)
 // ==========================================
 
-// Controles para menu lateral siempre visible
+// 1. Variables de los botones del menú
 const navBible = document.getElementById('nav-bible');
 const navSongs = document.getElementById('nav-songs');
 const navLogo = document.getElementById('nav-logo');
+const navMultimedia = document.getElementById('nav-multimedia');
+const navResources = document.getElementById('nav-resources');
 
-// Columnas
+// 2. Variables de las columnas
 const colBooks = document.getElementById('col-books');
 const colChapters = document.getElementById('col-chapters');
 const colVerses = document.getElementById('col-verses');
 const colSongs = document.getElementById('col-songs');
 const colStanzas = document.getElementById('col-stanzas');
 const colLogo = document.getElementById('col-logo');
+const colMultimedia = document.getElementById('col-multimedia');
+const colResources = document.getElementById('col-resources');
 
-// Funciones limpias para mostrar módulos
+// 3. Función auxiliar: Apaga TODAS las columnas y quita el color de todos los botones
+function hideAllAndReset() {
+    // Ocultar columnas
+    colBooks.style.display = 'none';
+    colChapters.style.display = 'none';
+    colVerses.style.display = 'none';
+    colSongs.style.display = 'none';
+    colStanzas.style.display = 'none';
+    colLogo.style.display = 'none';
+    colMultimedia.style.display = 'none';
+    colResources.style.display = 'none';
+
+    // Quitar fondo de los botones del menú
+    navBible.style.backgroundColor = 'transparent';
+    navSongs.style.backgroundColor = 'transparent';
+    navLogo.style.backgroundColor = 'transparent';
+    navMultimedia.style.backgroundColor = 'transparent';
+    navResources.style.backgroundColor = 'transparent';
+}
+
+// 4. Funciones individuales (ahora son cortas y precisas)
 function showBible() {
+    hideAllAndReset();
     colBooks.style.display = 'flex';
     colChapters.style.display = 'flex';
     colVerses.style.display = 'flex';
-    
-    colSongs.style.display = 'none';
-    colStanzas.style.display = 'none';
-    colLogo.style.display = 'none';
-
-    
     navBible.style.backgroundColor = 'rgba(255,255,255,0.2)';
-    navSongs.style.backgroundColor = 'transparent';
 }
 
 function showSongs() {
-    colBooks.style.display = 'none';
-    colChapters.style.display = 'none';
-    colVerses.style.display = 'none';
-    colLogo.style.display = 'none';
-    
+    hideAllAndReset();
     colSongs.style.display = 'flex';
     colStanzas.style.display = 'flex';
-    
     navSongs.style.backgroundColor = 'rgba(255,255,255,0.2)';
-    navBible.style.backgroundColor = 'transparent';
     
-    loadSongs(); // Cargar canciones al entrar
+    if (typeof loadSongs === 'function') loadSongs(); // Cargar canciones si existe la función
 }
 
 function showLogo() {
-    // Mostrar columna del logo
+    hideAllAndReset();
     colLogo.style.display = 'flex';
-    
-    // Ocultar las demás
-    colBooks.style.display = 'none';
-    colChapters.style.display = 'none';
-    colVerses.style.display = 'none';
-    colSongs.style.display = 'none';
-    colStanzas.style.display = 'none';
-    
-    // Efecto visual en la barra
     navLogo.style.backgroundColor = 'rgba(255,255,255,0.2)';
-    navBible.style.backgroundColor = 'transparent';
-    navSongs.style.backgroundColor = 'transparent';
 }
 
-// Asignar los clics a los iconos
+function showMultimedia() {
+    hideAllAndReset();
+    colMultimedia.style.display = 'flex';
+    navMultimedia.style.backgroundColor = 'rgba(255,255,255,0.2)';
+}
+
+function showResources() {
+    hideAllAndReset();
+    colResources.style.display = 'flex'; // Enciende la columna de recursos
+    navResources.style.backgroundColor = 'rgba(255,255,255,0.2)'; // Ilumina el botón
+}
+
+// 5. Asignar los clics a los iconos del menú
 navBible.addEventListener('click', showBible);
 navSongs.addEventListener('click', showSongs);
 navLogo.addEventListener('click', showLogo);
+navMultimedia.addEventListener('click', showMultimedia);
+navResources.addEventListener('click', showResources);
 
 // Mostrar la sección de Biblia al iniciar la aplicación
 showBible(); 
@@ -510,3 +525,141 @@ logoSize.addEventListener('input', (e) => {
     logoSizeVal.textContent = e.target.value + 'vw';
     sendLogoUpdate();
 });
+
+// Función para mostrar MULTIMEDIA
+function showMultimedia() {
+    colMultimedia.style.display = 'flex';
+    
+    colBooks.style.display = 'none';
+    colChapters.style.display = 'none';
+    colVerses.style.display = 'none';
+    colSongs.style.display = 'none';
+    colStanzas.style.display = 'none';
+    colLogo.style.display = 'none';
+    
+    navMultimedia.style.backgroundColor = 'rgba(255,255,255,0.2)';
+    navBible.style.backgroundColor = 'transparent';
+    navSongs.style.backgroundColor = 'transparent';
+    navLogo.style.backgroundColor = 'transparent';
+}
+
+navMultimedia.addEventListener('click', showMultimedia);
+
+// ==========================================
+// MÓDULO MULTIMEDIA
+// ==========================================
+const btnAddMedia = document.getElementById('btnAddMedia');
+const mediaGallery = document.getElementById('mediaGallery');
+const tabVideos = document.getElementById('tabVideos');
+const tabImages = document.getElementById('tabImages');
+const chkVideoLoop = document.getElementById('chkVideoLoop');
+
+let mediaLibrary = { videos: [], images: [] };
+let currentTab = 'videos'; // Empieza en videos
+
+// Enviar el estado del Loop cuando cambia
+chkVideoLoop.addEventListener('change', () => {
+    window.electronAPI.setVideoLoop(chkVideoLoop.checked);
+});
+
+// Cambiar pestañas
+tabVideos.addEventListener('click', () => {
+    currentTab = 'videos';
+    tabVideos.style.background = '#333'; tabVideos.style.color = 'white';
+    tabImages.style.background = '#eee'; tabImages.style.color = 'black';
+    renderGallery();
+});
+tabImages.addEventListener('click', () => {
+    currentTab = 'images';
+    tabImages.style.background = '#333'; tabImages.style.color = 'white';
+    tabVideos.style.background = '#eee'; tabVideos.style.color = 'black';
+    renderGallery();
+});
+
+// Agregar medios
+btnAddMedia.addEventListener('click', async () => {
+    const filePaths = await window.electronAPI.openMediaDialog();
+    if (filePaths && filePaths.length > 0) {
+        filePaths.forEach(path => {
+            const ext = path.split('.').pop().toLowerCase();
+            const mediaObj = { name: path.split('\\').pop().split('/').pop(), path: 'file:///' + encodeURI(path.replace(/\\/g, '/')) };
+            
+            if (['mp4', 'webm', 'mov'].includes(ext)) {
+                mediaLibrary.videos.push(mediaObj);
+            } else if (['png', 'jpg', 'jpeg', 'gif'].includes(ext)) {
+                mediaLibrary.images.push(mediaObj);
+            }
+        });
+        renderGallery();
+    }
+});
+
+// Dibujar la cuadrícula
+function renderGallery() {
+    mediaGallery.innerHTML = '';
+    const items = currentTab === 'videos' ? mediaLibrary.videos : mediaLibrary.images;
+    
+    items.forEach(item => {
+        const div = document.createElement('div');
+        div.style = "background: #f1f1f1; padding: 10px; border-radius: 5px; text-align: center; cursor: pointer; word-break: break-all; font-size: 12px; border: 1px solid #ddd;";
+        div.innerHTML = `<div>${currentTab === 'videos' ? '🎥' : '🖼️'}</div><div style="margin-top: 5px;">${item.name}</div>`;
+        
+        // Al hacer clic, enviarlo al proyector
+        div.addEventListener('click', () => {
+            if (currentTab === 'videos') {
+                window.electronAPI.changeBgVideo(item.path);
+            } else {
+                window.electronAPI.changeBgImage(item.path);
+            }
+        });
+        mediaGallery.appendChild(div);
+    });
+}
+
+// ==========================================
+// MÓDULO DE RECURSOS
+// ==========================================
+
+function showResources() {
+    colResources.style.display = 'flex';
+    // Ocultar las demás
+    colBooks.style.display = 'none'; colChapters.style.display = 'none'; colVerses.style.display = 'none';
+    colSongs.style.display = 'none'; colStanzas.style.display = 'none';
+    colLogo.style.display = 'none'; colMultimedia.style.display = 'none';
+    
+    // Pestaña activa
+    navResources.style.backgroundColor = 'rgba(255,255,255,0.2)';
+    navBible.style.backgroundColor = 'transparent'; navSongs.style.backgroundColor = 'transparent';
+    navLogo.style.backgroundColor = 'transparent'; navMultimedia.style.backgroundColor = 'transparent';
+}
+navResources.addEventListener('click', showResources);
+
+// (Recuerda agregar colResources.style.display = 'none'; a tus funciones showBible, showSongs, showLogo, showMultimedia)
+
+// --- Lógica Cuenta Regresiva ---
+const btnStartTimer = document.getElementById('btnStartTimer');
+const btnStopTimer = document.getElementById('btnStopTimer');
+const countdownPrefix = document.getElementById('countdownPrefix');
+const countdownMinutes = document.getElementById('countdownMinutes');
+
+btnStartTimer.addEventListener('click', () => {
+    window.electronAPI.startCountdown({
+        prefix: countdownPrefix.value,
+        minutes: parseInt(countdownMinutes.value)
+    });
+});
+
+btnStopTimer.addEventListener('click', () => {
+    window.electronAPI.stopCountdown();
+});
+
+// --- Lógica Notas Rápidas ---
+// Reutilizamos sendText para mandar las notas directamente
+for (let i = 1; i <= 4; i++) {
+    document.getElementById(`btnNote${i}`).addEventListener('click', () => {
+        const text = document.getElementById(`note${i}`).value;
+        if (text.trim() !== "") {
+            window.electronAPI.sendText(text);
+        }
+    });
+}
