@@ -101,3 +101,48 @@ window.electronAPI.onUpdateTextStyle((data) => {
         citaText.style.textShadow = shadow;
     }
 });
+
+// Escuchar los cambios del Dimmer
+window.electronAPI.onUpdateDimmer((opacity) => {
+    const dimmerOverlay = document.getElementById('dimmerOverlay');
+    if (dimmerOverlay) {
+        dimmerOverlay.style.opacity = opacity;
+    }
+});
+
+// ==========================================
+// CONTROL DEL LOGO
+// ==========================================
+window.electronAPI.onUpdateLogo((data) => {
+    const logo = document.getElementById('logoOverlay');
+    if (!logo) return;
+    
+    // 1. Asignar imagen y visibilidad
+    if (data.src) logo.src = data.src;
+    logo.style.display = (data.visible && data.src) ? 'block' : 'none';
+    
+    // 2. Tamaño
+    logo.style.width = data.size + 'vw';
+    
+    // 3. Posición (Limpiamos todas primero)
+    logo.style.top = 'auto';
+    logo.style.bottom = 'auto';
+    logo.style.left = 'auto';
+    logo.style.right = 'auto';
+    
+    const margen = '30px'; // Distancia del borde de la pantalla
+    
+    if (data.position === 'top-left') {
+        logo.style.top = margen;
+        logo.style.left = margen;
+    } else if (data.position === 'top-right') {
+        logo.style.top = margen;
+        logo.style.right = margen;
+    } else if (data.position === 'bottom-left') {
+        logo.style.bottom = margen;
+        logo.style.left = margen;
+    } else if (data.position === 'bottom-right') {
+        logo.style.bottom = margen;
+        logo.style.right = margen;
+    }
+});

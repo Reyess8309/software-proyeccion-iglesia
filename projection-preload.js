@@ -15,5 +15,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     onReceiveBgVideo: (callback) => ipcRenderer.on('set-bg-video', (event, videoPath) => callback(videoPath)),
 
   // Escuchar cambios de estilo de texto
-    onUpdateTextStyle: (callback) => ipcRenderer.on('update-text-style', (event, data) => callback(data))
+    onUpdateTextStyle: (callback) => ipcRenderer.on('update-text-style', (event, data) => callback(data)),
+
+    onUpdateDimmer: (callback) => ipcRenderer.on('update-dimmer', (event, opacity) => callback(opacity)),
+
+    onUpdateLogo: (callback) => ipcRenderer.on('update-logo', (event, logoData) => callback(logoData)),
 });

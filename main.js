@@ -36,7 +36,7 @@ function createControlPanel() {
     }
   });
   controlPanelWindow.loadFile('index.html');
-  controlPanelWindow.webContents.openDevTools(); 
+  //controlPanelWindow.webContents.openDevTools(); 
 }
 
 //Crea la ventana de proyección
@@ -162,4 +162,18 @@ ipcMain.handle('add-song', (event, song) => {
             else resolve(this.lastID);
         });
     });
+});
+
+// Recibe el valor del dimmer y lo manda a la proyección
+ipcMain.on('change-dimmer', (event, opacity) => {
+    if (projectionWindow) {
+        projectionWindow.webContents.send('update-dimmer', opacity);
+    }
+});
+
+
+ipcMain.on('change-logo', (event, logoData) => {
+    if (projectionWindow) {
+        projectionWindow.webContents.send('update-logo', logoData);
+    }
 });

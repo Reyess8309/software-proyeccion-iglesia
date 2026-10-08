@@ -106,7 +106,8 @@
         <!-- Agregamos IDs (nav-bible y nav-songs) y el cursor de "mano" -->
         <div class="sidebar-icon" id="nav-bible" style="cursor: pointer; background-color: rgba(255,255,255,0.2);">📖</div> 
         <div class="sidebar-icon" id="nav-songs" style="cursor: pointer;">🎶</div> 
-        <div class="sidebar-icon">🎬</div> 
+        <div class="sidebar-icon">🎬</div>
+        <div id="nav-logo" style="padding: 10px; cursor: pointer; color: white;">🖼️</div>
         <div class="sidebar-icon">⚙️</div> 
     </nav>
 
@@ -139,6 +140,35 @@
                 <div id="stanzas-list" style="overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 5px;"></div>
             </div>
 
+            <div id="col-logo" style="display: none; flex-direction: column; padding: 20px; color: black; background: #ffffff; flex: 1; border-radius: 8px;">
+                <h2 style="margin-top:0;">Módulo de Logo</h2>
+
+                <div style="margin-bottom: 20px;">
+                    <button id="btnLoadLogo" style="padding: 10px; cursor: pointer;">1. Cargar Logo (PNG transparente)</button>
+                    <p id="logoPathDisplay" style="font-size: 12px; color: gray;">Ningún logo seleccionado</p>
+                </div>
+
+                <div style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                    <label style="font-weight: bold; font-size: 18px;">2. Mostrar Logo en Proyección:</label>
+                    <input type="checkbox" id="toggleLogo" style="transform: scale(1.5);">
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label><strong>3. Tamaño:</strong> <span id="logoSizeVal">10vw</span></label><br>
+                    <input type="range" id="logoSize" min="3" max="30" value="10" style="width: 100%;">
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label><strong>4. Posición:</strong></label><br>
+                    <select id="logoPosition" style="width: 100%; padding: 8px;">
+                        <option value="top-left">Arriba - Izquierda</option>
+                        <option value="top-right" selected>Arriba - Derecha</option>
+                        <option value="bottom-left">Abajo - Izquierda</option>
+                        <option value="bottom-right">Abajo - Derecha</option>
+                    </select>
+                </div>
+            </div>
+
 
             <!-- 3. CONTROLES, Ultima columna siempre visible -->
             <div class="column" id="col-controls">
@@ -155,6 +185,12 @@
                 </div>
 
                 <button id="clearBgButton" style="width: 100%; padding: 8px;">Quitar Imagen</button>
+
+                <div style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px; border: 1px solid #ccc;">
+                    <label style="font-weight: bold; color: black;">Oscurecer Fondo: <span id="dimmerValue">0%</span></label>
+                    <br>
+                    <input type="range" id="dimmerSlider" min="0" max="0.9" step="0.05" value="0" style="width: 100%; margin-top: 5px;">
+                </div>
             </div>
         </main>
 

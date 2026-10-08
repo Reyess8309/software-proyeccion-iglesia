@@ -30,4 +30,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   //OBTIENE LOS AJUSTES DE TEXTO
   changeTextStyle: (styleData) => ipcRenderer.send('change-text-style', styleData),
   //onUpdateTextStyle: (callback) => ipcRenderer.on('update-text-style', (event, data) => callback(data))
+
+  //Cambia la opaidad en pantalla
+  changeDimmer: (opacity) => ipcRenderer.send('change-dimmer', opacity),
+
+  changeLogo: (logoData) => ipcRenderer.send('change-logo', logoData),
 });

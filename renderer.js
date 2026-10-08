@@ -39,6 +39,7 @@ if (clearTextButton) {
 // Controles para menu lateral siempre visible
 const navBible = document.getElementById('nav-bible');
 const navSongs = document.getElementById('nav-songs');
+const navLogo = document.getElementById('nav-logo');
 
 // Columnas
 const colBooks = document.getElementById('col-books');
@@ -46,8 +47,9 @@ const colChapters = document.getElementById('col-chapters');
 const colVerses = document.getElementById('col-verses');
 const colSongs = document.getElementById('col-songs');
 const colStanzas = document.getElementById('col-stanzas');
+const colLogo = document.getElementById('col-logo');
 
-// CORREGIDO: Funciones limpias para mostrar módulos
+// Funciones limpias para mostrar módulos
 function showBible() {
     colBooks.style.display = 'flex';
     colChapters.style.display = 'flex';
@@ -55,6 +57,8 @@ function showBible() {
     
     colSongs.style.display = 'none';
     colStanzas.style.display = 'none';
+    colLogo.style.display = 'none';
+
     
     navBible.style.backgroundColor = 'rgba(255,255,255,0.2)';
     navSongs.style.backgroundColor = 'transparent';
@@ -64,6 +68,7 @@ function showSongs() {
     colBooks.style.display = 'none';
     colChapters.style.display = 'none';
     colVerses.style.display = 'none';
+    colLogo.style.display = 'none';
     
     colSongs.style.display = 'flex';
     colStanzas.style.display = 'flex';
@@ -74,9 +79,27 @@ function showSongs() {
     loadSongs(); // Cargar canciones al entrar
 }
 
+function showLogo() {
+    // Mostrar columna del logo
+    colLogo.style.display = 'flex';
+    
+    // Ocultar las demás
+    colBooks.style.display = 'none';
+    colChapters.style.display = 'none';
+    colVerses.style.display = 'none';
+    colSongs.style.display = 'none';
+    colStanzas.style.display = 'none';
+    
+    // Efecto visual en la barra
+    navLogo.style.backgroundColor = 'rgba(255,255,255,0.2)';
+    navBible.style.backgroundColor = 'transparent';
+    navSongs.style.backgroundColor = 'transparent';
+}
+
 // Asignar los clics a los iconos
 navBible.addEventListener('click', showBible);
 navSongs.addEventListener('click', showSongs);
+navLogo.addEventListener('click', showLogo);
 
 // Mostrar la sección de Biblia al iniciar la aplicación
 showBible(); 
@@ -409,3 +432,81 @@ fontSizeSlider.addEventListener('input', (e) => {
 textColorPicker.addEventListener('input', sendStyleUpdate);
 textShadowSlider.addEventListener('input', sendStyleUpdate);
 textAlignSelect.addEventListener('change', sendStyleUpdate);
+
+// ==========================================
+// CONTROL DE ILUMINACIÓN (DIMMER)
+// ==========================================
+const dimmerSlider = document.getElementById('dimmerSlider');
+const dimmerValue = document.getElementById('dimmerValue');
+
+if (dimmerSlider) {
+    dimmerSlider.addEventListener('input', (e) => {
+        const opacity = e.target.value;
+        // Actualizar el texto del porcentaje (ej. 0.5 * 100 = 50%)
+        dimmerValue.textContent = Math.round(opacity * 100) + '%';
+        // Enviar a la proyección
+        window.electronAPI.changeDimmer(opacity);
+    });
+}
+
+// ==========================================
+// MÓDULO DE LOGO
+// ==========================================
+
+// (Opcional) Si quieres que este panel reaccione al menú lateral, debes agregar 
+// colLogo.style.display = 'none'; en tus funciones showBible() y showSongs(),
+// y crear una función showLogo() similar para mostrar el colLogo.
+
+navLogo.addEventListener('click', () => {
+    // Ocultar Biblia y Canciones (ajusta los IDs si necesitas)
+    document.getElementById('col-books').style.display = 'none';
+    document.getElementById('col-chapters').style.display = 'none';
+    document.getElementById('col-verses').style.display = 'none';
+    document.getElementById('col-songs').style.display = 'none';
+    document.getElementById('col-stanzas').style.display = 'none';
+    
+    // Mostrar Logo
+    colLogo.style.display = 'flex';
+    
+    // Resaltar en el menú
+    navLogo.style.backgroundColor = 'rgba(255,255,255,0.2)';
+    document.getElementById('nav-bible').style.backgroundColor = 'transparent';
+    document.getElementById('nav-songs').style.backgroundColor = 'transparent';
+});
+
+// Controles del Logo
+const btnLoadLogo = document.getElementById('btnLoadLogo');
+const logoPathDisplay = document.getElementById('logoPathDisplay');
+const toggleLogo = document.getElementById('toggleLogo');
+const logoSize = document.getElementById('logoSize');
+const logoSizeVal = document.getElementById('logoSizeVal');
+const logoPosition = document.getElementById('logoPosition');
+
+let currentLogoPath = '';
+
+// Reutilizamos la función de medios para elegir el Logo
+btnLoadLogo.addEventListener('click', async () => {
+    const filePaths = await window.electronAPI.openMediaDialog();
+    if (filePaths && filePaths.length > 0) {
+        currentLogoPath = 'file:///' + encodeURI(filePaths[0].replace(/\\/g, '/'));
+        logoPathDisplay.textContent = filePaths[0]; // Mostrar ruta
+        sendLogoUpdate(); // Actualizar si está prendido
+    }
+});
+
+// Enviar los datos del logo al proyectarse
+function sendLogoUpdate() {
+    window.electronAPI.changeLogo({
+        src: currentLogoPath,
+        visible: toggleLogo.checked,
+        size: logoSize.value,
+        position: logoPosition.value
+    });
+}
+
+toggleLogo.addEventListener('change', sendLogoUpdate);
+logoPosition.addEventListener('change', sendLogoUpdate);
+logoSize.addEventListener('input', (e) => {
+    logoSizeVal.textContent = e.target.value + 'vw';
+    sendLogoUpdate();
+});
