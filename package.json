@@ -1,0 +1,47 @@
+{
+  "name": "proyecto",
+  "productName": "Proyección Iglesia",
+  "version": "1.0.0",
+  "description": "Software de proyección para iglesias",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win",
+    "dist:linux": "electron-builder --linux"
+  },
+  "keywords": [],
+  "author": "Pedro Reyes <pedrosimajreyes1@gmail.com>",
+  "license": "ISC",
+  "build": {
+    "appId": "com.reyess.proyeccion",
+    "files": [
+      "*.js",
+      "*.html",
+      "!Biblias/**",
+      "!userdata.db",
+      "!bibles.sqlite"
+    ],
+    "extraResources": [
+      { "from": "bibles.sqlite", "to": "bibles.sqlite" }
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "category": "Office"
+    }
+  },
+  "devDependencies": {
+    "electron": "^38.4.0",
+    "electron-builder": "^26.15.3"
+  },
+  "dependencies": {
+    "sqlite3": "^5.1.7"
+  }
+}

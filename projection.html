@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Pantalla de Proyección</title>
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self'">
+    <style>
+        html, body {
+            margin: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden; /* Oculta barras de scroll */
+        }
+
+        body {
+            background-color: black;
+            background-size: cover;    /* el ajuste elegido en el panel lo cambia */
+            background-position: center;
+            background-repeat: no-repeat;
+            color: white;
+            font-family: Arial, sans-serif;
+            cursor: none;       /* El puntero no se ve en el proyector */
+            user-select: none;
+        }
+
+        /* Capas, de atrás hacia adelante: video → oscurecer → texto → logo */
+        #bgVideo {
+            display: none;
+            position: fixed; inset: 0;
+            width: 100vw; height: 100vh;
+            object-fit: cover;
+            z-index: 0;
+        }
+        /* Ajuste del video (data-ajuste lo pone el panel) */
+        #bgVideo[data-ajuste="ajustar"] { object-fit: contain; }
+        #bgVideo[data-ajuste="estirar"] { object-fit: fill; }
+        #bgVideo[data-ajuste="original"] { object-fit: none; }
+        #bgVideo[data-ajuste="ancho"], #bgVideo[data-ajuste="alto"] {
+            inset: auto; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            object-fit: fill;
+        }
+        #bgVideo[data-ajuste="ancho"] { width: 100vw; height: auto; }
+        #bgVideo[data-ajuste="alto"] { width: auto; height: 100vh; }
+
+        #dimmerOverlay {
+            position: fixed; inset: 0;
+            background-color: black;
+            opacity: 0;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Capa del texto: "Ocultar texto" la desvanece sin borrar lo que tiene
+           (va aparte porque las transiciones del texto ya animan la opacidad de #text-container) */
+        #textLayer {
+            position: fixed; inset: 0;
+            z-index: 2;
+            pointer-events: none;
+            transition: opacity .4s ease;
+        }
+        #textLayer.oculto { opacity: 0; }
+
+        #text-container, .text-ghost {
+            position: fixed; inset: 0;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center; /* Arriba / Medio / Abajo se controla desde Ajustes Rápidos */
+            padding: 5vh 5vw;
+            box-sizing: border-box;
+        }
+
+        #content, .g-content {
+            margin: 0;
+            width: 100%;
+            flex-shrink: 0;          /* el alto real del texto se usa para calcular si cabe */
+            text-align: center;
+            white-space: pre-wrap;   /* respeta los saltos de línea de las estrofas */
+            text-wrap: balance;      /* párrafos simétricos */
+            word-break: normal;      /* no romper palabras a la mitad */
+            overflow-wrap: normal;
+            line-height: 1.2;
+        }
+
+        /* --- TÍTULO (notas, temas, definiciones) --- */
+        #title, .g-title {
+            display: none;
+            width: 100%;
+            flex-shrink: 0;
+            margin: 0 0 0.4em;
+            color: #ffcc00;
+            font-weight: bold;
+            line-height: 1.15;
+            text-align: center;
+            text-shadow: 2px 2px 6px rgba(0,0,0,0.8);
+        }
+
+        /* --- ESTILO PARA LA CITA BÍBLICA --- */
+        #citation, .g-citation {
+            display: none;
+            width: 100%;
+            flex-shrink: 0;
+            margin-top: 15px;
+            color: #ffcc00; /* Color dorado */
+            font-style: italic;
+            font-weight: bold;
+            text-align: center;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.8); /* Sombrita para que se lea siempre */
+        }
+
+        /* Presentaciones: ocupa toda la pantalla, encima del texto y debajo del logo */
+        #slideStage {
+            position: fixed; inset: 0;
+            z-index: 2;
+            background: #000;
+            overflow: hidden;
+        }
+        #slideStage[hidden] { display: none; }
+
+        #logoOverlay {
+            display: none;
+            position: fixed;
+            z-index: 3;
+        }
+    </style>
+</head>
+<body>
+    <video id="bgVideo" autoplay loop muted></video>
+
+    <div id="dimmerOverlay"></div>
+
+    <div id="textLayer">
+        <div id="text-container">
+            <div id="title"></div>
+            <h1 id="content"></h1>
+            <div id="citation"></div>
+        </div>
+    </div>
+
+    <div id="slideStage" hidden></div>
+
+    <img id="logoOverlay" alt="">
+
+    <script src="./slide-renderer.js"></script>
+    <script src="./projection-renderer.js"></script>
+</body>
+</html>

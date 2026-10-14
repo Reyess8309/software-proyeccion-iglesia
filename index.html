@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel de Control</title>
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self'">
+    <style>
+        /* ============================================================
+           SISTEMA DE DISEÑO
+           ============================================================ */
+        :root {
+            --bg: #f3f4f6;
+            --surface: #ffffff;
+            --surface-2: #f9fafb;
+            --border: #e5e7eb;
+            --text: #111827;
+            --muted: #6b7280;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --primary-soft: #eaf0ff;
+            --live: #f59e0b;          /* lo que está en pantalla */
+            --live-soft: #fff6e0;
+            --danger: #dc2626;
+            --danger-soft: #fdecec;
+            --success: #16a34a;
+            --sidebar: #111827;
+            --radius: 10px;
+            --radius-sm: 6px;
+            --shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 1px 3px rgba(16, 24, 40, .08);
+            --shadow-lg: 0 20px 40px rgba(16, 24, 40, .18);
+        }
+
+        * { box-sizing: border-box; }
+
+        html, body { height: 100%; }
+
+        body {
+            margin: 0;
+            display: grid;
+            grid-template-columns: 76px 1fr;
+            font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+            font-size: 14px;
+            color: var(--text);
+            background: var(--bg);
+            overflow: hidden;
+        }
+
+        h2, h3, h4 { margin: 0; font-weight: 600; }
+        h3 { font-size: 15px; }
+        h4 { font-size: 13px; }
+
+        [hidden] { display: none !important; }
+        .grow { flex: 1; min-width: 0; }
+
+        /* --- CONTROLES BÁSICOS --- */
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+            padding: 8px 14px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--surface);
+            color: var(--text);
+            font: inherit; font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background .15s, border-color .15s, color .15s;
+        }
+        .btn:hover { background: var(--surface-2); border-color: #d1d5db; }
+        .btn:disabled { opacity: .5; cursor: default; }
+        .btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+        .btn-primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); }
+        .btn-danger { background: var(--danger); border-color: var(--danger); color: #fff; }
+        .btn-danger:hover { background: #b91c1c; border-color: #b91c1c; }
+        .btn-ghost { background: transparent; border-color: transparent; color: var(--muted); }
+        .btn-ghost:hover { background: var(--surface-2); color: var(--text); }
+        .btn-sm { padding: 5px 10px; font-size: 13px; }
+        .btn-icon { padding: 5px 8px; min-width: 30px; }
+        .btn-block { width: 100%; }
+
+        .input, select.input, textarea.input {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--surface);
+            color: var(--text);
+            font: inherit;
+            outline: none;
+        }
+        .input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+        textarea.input { resize: vertical; line-height: 1.45; }
+
+        label.field { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .03em; }
+
+        input[type="range"] { width: 100%; accent-color: var(--primary); }
+        input[type="color"] { width: 42px; height: 34px; padding: 2px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); cursor: pointer; }
+
+        /* Interruptor (checkbox con estilo) */
+        .switch { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; }
+        .switch input { display: none; }
+        .switch .track { width: 38px; height: 22px; border-radius: 11px; background: #d1d5db; position: relative; transition: background .15s; flex-shrink: 0; }
+        .switch .track::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: var(--shadow); transition: transform .15s; }
+        .switch input:checked + .track { background: var(--primary); }
+        .switch input:checked + .track::after { transform: translateX(16px); }
+
+        /* Control segmentado (pestañas) */
+        .segmented { display: inline-flex; padding: 3px; background: var(--bg); border-radius: 8px; gap: 2px; }
+        .segmented button { border: none; background: transparent; padding: 6px 14px; border-radius: 6px; font: inherit; font-weight: 500; color: var(--muted); cursor: pointer; }
+        .segmented button.activo { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+
+        .hint { font-size: 12px; color: var(--muted); }
+        .kbd { display: inline-block; padding: 0 5px; border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 4px; font-size: 11px; background: var(--surface); }
+        .badge { display: inline-flex; align-items: center; padding: 1px 7px; border-radius: 999px; font-size: 11px; font-weight: 600; background: var(--bg); color: var(--muted); white-space: nowrap; flex-shrink: 0; }
+        .badge-live { background: var(--live); color: #fff; }
+
+        .empty { padding: 28px 16px; text-align: center; color: var(--muted); font-size: 13px; line-height: 1.5; }
+        .empty .empty-icon { font-size: 28px; display: block; margin-bottom: 6px; }
+
+        /* ============================================================
+           MENÚ LATERAL
+           ============================================================ */
+        .sidebar {
+            background: var(--sidebar);
+            display: flex; flex-direction: column; align-items: center;
+            padding: 14px 0; gap: 4px;
+        }
+        .nav-btn {
+            width: 64px; padding: 10px 0 8px;
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+            border: none; border-radius: 10px;
+            background: transparent; color: #9ca3af;
+            font: inherit; font-size: 11px; cursor: pointer;
+            transition: background .15s, color .15s;
+        }
+        .nav-btn .nav-icon { font-size: 22px; line-height: 1; filter: grayscale(.4); }
+        .nav-btn:hover { background: rgba(255,255,255,.06); color: #e5e7eb; }
+        .nav-btn.activo { background: rgba(255,255,255,.12); color: #fff; }
+        .nav-btn.activo .nav-icon { filter: none; }
+
+        /* ============================================================
+           ÁREA PRINCIPAL
+           ============================================================ */
+        .app { display: grid; grid-template-columns: 1fr 320px; min-width: 0; height: 100vh; }
+
+        .workspace { min-width: 0; min-height: 0; padding: 14px; overflow: hidden; }
+
+        .section { display: none; height: 100%; gap: 12px; min-height: 0; }
+        .section.activa { display: flex; }
+
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            display: flex; flex-direction: column;
+            min-width: 0; min-height: 0;
+            flex: 1;
+        }
+        .panel-header {
+            display: flex; align-items: center; justify-content: space-between; gap: 10px;
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border);
+            min-height: 52px;
+        }
+        .panel-tools { padding: 10px 14px; display: flex; flex-direction: column; gap: 8px; border-bottom: 1px solid var(--border); }
+        .panel-scroll { flex: 1; overflow-y: auto; min-height: 0; }
+        .panel-body { padding: 14px; }
+
+        /* --- Elementos seleccionables (libros, versículos, estrofas…) --- */
+        .item-lista {
+            padding: 8px 14px;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            transition: background .1s;
+        }
+        .item-lista:hover { background: var(--surface-2); }
+        .item-lista.seleccionado { background: var(--primary-soft); border-left-color: var(--primary); font-weight: 600; }
+        .item-lista.proyectado { background: var(--live-soft); border-left-color: var(--live); }
+
+        .group-label { padding: 12px 14px 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+
+        /* ============================================================
+           BIBLIA
+           ============================================================ */
+        #col-books { flex: 0 0 230px; }
+        #col-chapters { flex: 0 0 200px; }
+        #col-verses { flex: 1; }
+
+        .chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); gap: 6px; padding: 12px; align-content: start; }
+        .chip {
+            height: 36px; display: flex; align-items: center; justify-content: center;
+            border: 1px solid var(--border); border-radius: var(--radius-sm);
+            background: var(--surface); cursor: pointer; font-weight: 500;
+        }
+        .chip:hover { border-color: var(--primary); color: var(--primary); }
+        .chip.seleccionado { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+        .verse { display: flex; gap: 12px; padding: 10px 14px; line-height: 1.5; border-bottom: 1px solid var(--border); cursor: pointer; }
+        .verse:hover { background: var(--surface-2); }
+        .verse.proyectado { background: var(--live-soft); box-shadow: inset 3px 0 0 var(--live); }
+        .verse .num { flex: 0 0 28px; font-weight: 700; color: var(--primary); text-align: right; }
+        .verse.proyectado .num { color: var(--live); }
+
+        /* Pestañas Capítulo / Buscar / Historial */
+        #col-verses .segmented { min-width: 0; }
+        #col-verses .segmented button { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        #versesTitle { max-width: 240px; }
+        .verse-view:not(.panel-scroll) { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+        .verse-view[hidden] { display: none !important; }
+        .row-tools { flex-direction: row; align-items: center; }
+
+        /* Resultados de búsqueda e historial: cita arriba, texto abajo */
+        .verse-hit { flex-direction: column; gap: 2px; }
+        .verse-hit .hit-head { display: flex; align-items: center; gap: 8px; }
+        .verse-hit .hit-ref { font-weight: 700; color: var(--primary); }
+        .verse-hit.proyectado .hit-ref { color: var(--live); }
+        .verse-hit .hit-time { font-size: 12px; color: var(--muted); }
+        .verse-hit .row-actions { margin-left: auto; display: flex; gap: 2px; opacity: 0; transition: opacity .1s; }
+        .verse-hit:hover .row-actions { opacity: 1; }
+        .verse-hit mark { background: rgba(245, 158, 11, .35); color: inherit; border-radius: 2px; padding: 0 1px; }
+
+        /* ============================================================
+           CANCIONES
+           ============================================================ */
+        #col-songs { flex: 0 0 340px; }
+        #col-stanzas { flex: 1; }
+
+        .song-row {
+            display: flex; align-items: center; gap: 6px;
+            padding: 8px 10px 8px 14px;
+            border-left: 3px solid transparent;
+            cursor: pointer;
+        }
+        .song-row:hover { background: var(--surface-2); }
+        .song-row.seleccionado { background: var(--primary-soft); border-left-color: var(--primary); }
+        .song-row .song-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .song-row .row-actions { display: flex; gap: 2px; opacity: 0; transition: opacity .1s; }
+        .song-row:hover .row-actions, .song-row.seleccionado .row-actions { opacity: 1; }
+
+        .agenda-card { margin: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+        .agenda-head { display: flex; align-items: center; gap: 8px; padding: 10px 12px; cursor: pointer; background: var(--surface-2); }
+        .agenda-head strong { flex: 1; }
+        .agenda-songs .song-row { padding-left: 12px; }
+        .agenda-songs .order { width: 20px; color: var(--muted); font-weight: 600; }
+
+        .stanza-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; padding: 14px; align-content: start; }
+        .stanza {
+            border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 12px 14px 14px; cursor: pointer; background: var(--surface);
+            white-space: pre-line; line-height: 1.5;
+            border-left-width: 3px;
+            transition: border-color .1s, background .1s;
+        }
+        .stanza:hover { border-color: #c7d2fe; }
+        .stanza .stanza-label { display: block; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; white-space: normal; }
+        .stanza.proyectado { background: var(--live-soft); border-color: var(--live); }
+        .stanza.proyectado .stanza-label { color: var(--live); }
+
+        /* ============================================================
+           MULTIMEDIA
+           ============================================================ */
+        .player { display: flex; gap: 14px; padding: 14px; border-bottom: 1px solid var(--border); background: #0b0f19; color: #e5e7eb; }
+        .player video { width: 240px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: var(--radius-sm); background: #000; flex-shrink: 0; }
+        .player-info { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
+        .player-title { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .player-row { display: flex; align-items: center; gap: 10px; }
+        .player-row input[type="range"] { flex: 1; accent-color: var(--live); }
+        .player .time { font-variant-numeric: tabular-nums; font-size: 12px; color: #9ca3af; min-width: 42px; }
+        .player .btn { background: rgba(255,255,255,.1); border-color: transparent; color: #fff; }
+        .player .btn:hover { background: rgba(255,255,255,.2); }
+        .player .switch { color: #d1d5db; font-size: 13px; }
+
+        .media-group { padding: 4px 14px 14px; }
+        .media-group-title { display: flex; align-items: center; gap: 8px; padding: 10px 0; color: var(--muted); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+        .media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
+
+        .media-card {
+            position: relative;
+            border: 1px solid var(--border); border-radius: var(--radius);
+            overflow: hidden; cursor: pointer; background: var(--surface);
+            transition: box-shadow .15s, border-color .15s, transform .15s;
+        }
+        .media-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-1px); }
+        .media-card .thumb { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block; background: #111827; }
+        .media-card .thumb.contain { object-fit: contain; background: repeating-conic-gradient(#e5e7eb 0 25%, #fff 0 50%) 0 0 / 16px 16px; }
+        .media-card .meta { display: flex; align-items: center; gap: 6px; padding: 8px 10px; font-size: 12px; }
+        .media-card .meta .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .media-card .duration { position: absolute; right: 6px; top: 6px; padding: 1px 6px; border-radius: 4px; background: rgba(0,0,0,.7); color: #fff; font-size: 11px; font-variant-numeric: tabular-nums; }
+        .media-card .on-air { position: absolute; left: 6px; top: 6px; display: none; }
+        .media-card .remove { position: absolute; right: 6px; bottom: 40px; display: none; background: rgba(0,0,0,.65); color: #fff; border: none; border-radius: 50%; width: 26px; height: 26px; cursor: pointer; }
+        .media-card:hover .remove { display: block; }
+        .media-card.activo { border-color: var(--live); box-shadow: 0 0 0 2px var(--live); }
+        .media-card.activo .on-air { display: inline-flex; }
+        .media-card.seleccionado { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary); }
+        .media-card.faltante .thumb { opacity: .3; }
+
+        /* ============================================================
+           LOGO
+           ============================================================ */
+        #sec-logo .panel:first-child { flex: 1.4; }
+        #sec-logo .panel:last-child { flex: 1; }
+        .settings { display: flex; flex-direction: column; gap: 20px; padding: 16px; }
+
+        .pos-picker {
+            position: relative; width: 100%; aspect-ratio: 16 / 9;
+            border-radius: var(--radius); background: linear-gradient(135deg, #1f2937, #111827);
+            border: 1px solid var(--border); overflow: hidden;
+        }
+        .pos-picker .screen-label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,.25); font-size: 13px; letter-spacing: .1em; text-transform: uppercase; }
+        .pos-btn {
+            position: absolute; width: 26%; aspect-ratio: 16 / 10;
+            border: 2px dashed rgba(255,255,255,.25); border-radius: 8px;
+            background: transparent; cursor: pointer; padding: 6px;
+            display: flex; align-items: center; justify-content: center;
+            transition: border-color .15s, background .15s;
+        }
+        .pos-btn:hover { border-color: rgba(255,255,255,.6); background: rgba(255,255,255,.05); }
+        .pos-btn.activo { border: 2px solid var(--live); background: rgba(245,158,11,.12); }
+        .pos-btn img { max-width: 100%; max-height: 100%; object-fit: contain; display: none; }
+        .pos-btn.activo img { display: block; }
+        .pos-btn[data-pos="top-left"] { top: 6%; left: 4%; }
+        .pos-btn[data-pos="top-right"] { top: 6%; right: 4%; }
+        .pos-btn[data-pos="bottom-left"] { bottom: 6%; left: 4%; }
+        .pos-btn[data-pos="bottom-right"] { bottom: 6%; right: 4%; }
+
+        /* ============================================================
+           UTILIDADES
+           ============================================================ */
+        #sec-resources { flex-direction: column; overflow-y: auto; }
+        #sec-resources .panel { flex: none; }
+
+        .timer-layout { display: grid; grid-template-columns: minmax(280px, 1fr) 1fr; gap: 24px; padding: 18px; }
+        .timer-display { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 18px; border-radius: var(--radius); background: #0b0f19; }
+        .timer-display .btn { background: rgba(255,255,255,.1); border-color: transparent; color: #fff; font-size: 18px; width: 40px; height: 40px; padding: 0; border-radius: 50%; }
+        .timer-display .btn:hover { background: rgba(255,255,255,.2); }
+        .timer-digits { display: flex; align-items: center; color: #fff; font-size: 52px; font-weight: 300; font-variant-numeric: tabular-nums; }
+        .timer-digits input { width: 1.4em; background: transparent; border: none; color: inherit; font: inherit; text-align: center; outline: none; border-radius: 6px; appearance: textfield; -moz-appearance: textfield; }
+        .timer-digits input::-webkit-inner-spin-button { -webkit-appearance: none; }
+        .timer-digits input:focus { background: rgba(255,255,255,.08); }
+        .timer-status { margin-top: 10px; text-align: center; font-size: 13px; color: var(--muted); min-height: 18px; }
+        .timer-status.en-curso { color: var(--live); font-weight: 600; }
+        .timer-options { display: flex; flex-direction: column; gap: 16px; }
+        .preset-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+
+        .notes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; padding: 14px; }
+        .note-card { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-2); display: flex; flex-direction: column; }
+        .note-card.proyectado { border-color: var(--live); box-shadow: 0 0 0 2px var(--live-soft); }
+        .note-card .note-title { border: none; background: transparent; font-weight: 600; font-size: 15px; padding: 12px 14px 4px; }
+        .note-card .note-title:focus { box-shadow: none; }
+        .note-card textarea { border: none; background: transparent; min-height: 120px; padding: 6px 14px 10px; }
+        .note-card textarea:focus { box-shadow: none; }
+        .note-footer { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-top: 1px solid var(--border); }
+        .note-footer .segmented button { padding: 4px 10px; font-size: 12px; }
+
+        /* ============================================================
+           PANEL DERECHO: PANTALLA
+           ============================================================ */
+        .screen-panel {
+            background: var(--surface);
+            border-left: 1px solid var(--border);
+            display: flex; flex-direction: column;
+            min-height: 0; overflow-y: auto;
+        }
+        .screen-block { padding: 14px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
+        .screen-block:last-child { border-bottom: none; }
+        .screen-block h4 { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+
+        .preview { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: var(--radius-sm); overflow: hidden; }
+        .preview img { width: 100%; height: 100%; object-fit: contain; display: none; }
+        .preview .placeholder { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: #6b7280; font-size: 12px; }
+        .preview .live-tag { position: absolute; top: 8px; left: 8px; display: none; }
+        .preview.en-vivo img, .preview.en-vivo .live-tag { display: block; }
+        .preview.en-vivo .placeholder { display: none; }
+        .preview .hidden-tag { position: absolute; top: 8px; right: 8px; display: none; background: #f59e0b; color: #111827; }
+        .preview.texto-oculto .hidden-tag { display: inline-flex; }
+
+        .on-air-label { font-size: 13px; color: var(--muted); min-height: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .on-air-label strong { color: var(--text); }
+
+        .row { display: flex; align-items: center; gap: 8px; }
+        .row > .grow { flex: 1; min-width: 0; }
+
+        /* ============================================================
+           MODALES
+           ============================================================ */
+        .modal {
+            display: none; position: fixed; inset: 0; z-index: 1000;
+            background: rgba(17, 24, 39, .55);
+            justify-content: center; align-items: center;
+            padding: 20px;
+        }
+        .modal-card {
+            background: var(--surface); border-radius: 14px; box-shadow: var(--shadow-lg);
+            width: 520px; max-width: 100%; max-height: 90vh; overflow-y: auto;
+            display: flex; flex-direction: column;
+        }
+        .modal-card.small { width: 380px; }
+        .modal-head { padding: 16px 20px; border-bottom: 1px solid var(--border); }
+        .modal-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; }
+        .modal-foot { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+        .modal-foot .spacer { flex: 1; }
+        .shortcuts { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; align-items: center; font-size: 13px; }
+        .shortcuts dt { white-space: nowrap; }
+        .shortcuts dd { margin: 0; color: var(--muted); }
+        .settings-group { padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); display: flex; flex-direction: column; gap: 10px; }
+        .value { font-weight: 600; color: var(--text); text-transform: none; letter-spacing: 0; }
+        .trans-grid { display: grid; grid-template-columns: auto 1fr; gap: 8px 12px; align-items: center; }
+        .trans-grid .field { margin: 0; }
+
+        /* --- Menú: separador y botón "En vivo" (solo en la vista completa) --- */
+        .nav-sep { width: 36px; height: 1px; background: rgba(255,255,255,.14); margin: 6px 0; flex-shrink: 0; }
+        #nav-pro { display: none; }
+        body.layout-completo #nav-pro { display: flex; }
+
+        /* ============================================================
+           PRESENTACIONES
+           ============================================================ */
+        #pres-sidebar { flex: 0 0 250px; }
+        #pres-editor { flex: 1; }
+        #pres-props { flex: 0 0 330px; }
+
+        #pres-editor > .panel-header { flex-wrap: wrap; row-gap: 6px; }
+        .title-input { font-size: 16px; font-weight: 600; border-color: transparent; background: transparent; min-width: 180px; }
+        .title-input:hover { border-color: var(--border); }
+        .counter { font-variant-numeric: tabular-nums; font-weight: 600; min-width: 54px; text-align: center; white-space: nowrap; }
+        #presSaved { white-space: nowrap; }
+
+        /* Marco 16:9 donde se dibuja una diapositiva (slide-renderer.js) */
+        .slide-frame { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 6px; background: #000; }
+        .editor-body { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; padding: 16px; overflow: auto; background: var(--bg); }
+        .editor-stage { position: relative; flex: 1; min-height: 160px; }
+        .editor-frame { position: absolute; box-shadow: var(--shadow-lg); aspect-ratio: auto; }
+        .editor-bottom { display: flex; gap: 14px; align-items: flex-start; }
+        .next-box { width: 220px; flex-shrink: 0; }
+
+        .slide-thumbs { padding: 8px 10px 14px; display: flex; flex-direction: column; gap: 10px; }
+        .slide-thumb { display: flex; gap: 8px; align-items: flex-start; cursor: pointer; border-radius: 8px; padding: 4px; }
+        .slide-thumb .num { width: 18px; text-align: right; font-size: 12px; color: var(--muted); padding-top: 2px; font-weight: 600; }
+        .slide-thumb .slide-frame { flex: 1; border: 2px solid transparent; border-radius: 6px; }
+        .slide-thumb:hover .slide-frame { border-color: #c7d2fe; }
+        .slide-thumb.seleccionado .slide-frame { border-color: var(--primary); }
+        .slide-thumb.proyectado .slide-frame { border-color: var(--live); box-shadow: 0 0 0 2px var(--live); }
+        .slide-thumb.proyectado .num { color: var(--live); }
+        .slide-thumb.arrastrando { opacity: .4; }
+        .slide-thumb.soltar-antes { box-shadow: 0 -3px 0 var(--primary); }
+        .slide-thumb.soltar-despues { box-shadow: 0 3px 0 var(--primary); }
+
+        .props { padding: 14px; display: flex; flex-direction: column; gap: 16px; }
+        .layout-picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .style-picker { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .pick-card { position: relative; padding: 0; border: 2px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--surface); cursor: pointer; text-align: left; font: inherit; color: var(--text); }
+        .pick-card:hover { border-color: #c7d2fe; }
+        .pick-card.activo { border-color: var(--primary); }
+        .pick-card .slide-frame { border-radius: 0; }
+        .pick-card .pick-label { display: block; padding: 4px 6px; font-size: 11px; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .pick-card .pick-remove { position: absolute; top: 4px; right: 4px; display: none; width: 22px; height: 22px; border: none; border-radius: 50%; background: rgba(0,0,0,.6); color: #fff; cursor: pointer; font-size: 11px; }
+        .pick-card:hover .pick-remove { display: block; }
+        .color-row { display: flex; gap: 14px; flex-wrap: wrap; }
+        .color-row label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
+        [data-fondo][hidden], [data-para][hidden] { display: none !important; }
+
+        /* ============================================================
+           PÁGINA WEB
+           ============================================================ */
+        #sec-web .panel { flex: 1; }
+        .web-toolbar { gap: 6px; }
+        .zoom-box { display: flex; align-items: center; gap: 2px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+        .zoom-box span { min-width: 40px; text-align: center; }
+        .web-bar { display: flex; align-items: center; gap: 10px; padding: 6px 14px; border-bottom: 1px solid var(--border); min-height: 38px; }
+        .web-sites { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+        .site-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 4px 3px 10px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); font-size: 12px; cursor: pointer; color: var(--text); font-family: inherit; }
+        .site-chip:hover { border-color: var(--primary); }
+        .site-chip .x { border: none; background: transparent; color: var(--muted); cursor: pointer; font-size: 11px; padding: 0 4px; }
+        .web-area { position: relative; flex: 1; min-height: 0; background: var(--surface-2); }
+        .web-area .empty { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #webScreen { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #000; outline: none; cursor: default; user-select: none; }
+        #webScreen:focus { box-shadow: inset 0 0 0 3px var(--live); }
+
+        /* ============================================================
+           AJUSTES: TARJETAS DE DISEÑO
+           ============================================================ */
+        .layout-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .layout-option {
+            display: flex; flex-direction: column; gap: 6px; text-align: left;
+            padding: 12px; border: 2px solid var(--border); border-radius: var(--radius);
+            background: var(--surface); color: var(--text); font: inherit; cursor: pointer;
+        }
+        .layout-option:hover { border-color: #c7d2fe; }
+        .layout-option.activo { border-color: var(--primary); background: var(--primary-soft); }
+        .layout-thumb { display: flex; gap: 4px; height: 90px; padding: 6px; border-radius: 6px; background: var(--bg); margin-bottom: 4px; }
+        .layout-thumb span { border-radius: 3px; }
+        .layout-thumb .t-side { width: 10px; background: #1f2937; }
+        .layout-thumb .t-aside { width: 34px; background: #94a3b8; }
+        .layout-thumb .t-main { flex: 1; display: grid; gap: 3px; }
+        .layout-thumb i { background: #cbd5e1; border-radius: 2px; }
+        .thumb-secciones .t-main { grid-template-columns: 1fr 1fr 2fr; }
+        .thumb-completo .t-main { grid-template-columns: 1fr 1fr 2fr 1.2fr; grid-template-rows: 1fr 1fr 0.8fr; }
+        .thumb-completo i:nth-child(1) { grid-column: 1; grid-row: 1; }
+        .thumb-completo i:nth-child(2) { grid-column: 2 / 4; grid-row: 1; background: #fcd34d; }
+        .thumb-completo i:nth-child(3) { grid-column: 1; grid-row: 2; }
+        .thumb-completo i:nth-child(4) { grid-column: 2 / 4; grid-row: 2; background: #93c5fd; }
+        .thumb-completo i:nth-child(5) { grid-column: 1 / 4; grid-row: 3; background: #a7f3d0; }
+        .thumb-completo i:nth-child(6) { grid-column: 4; grid-row: 1 / 4; }
+
+        /* ============================================================
+           TEMA OSCURO
+           ============================================================ */
+        body.tema-oscuro {
+            --bg: #0e1015;
+            --surface: #171a21;
+            --surface-2: #1f232c;
+            --border: #2a2f3a;
+            --text: #e6e8ec;
+            --muted: #9aa3b2;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --primary-soft: rgba(59, 130, 246, .16);
+            --live-soft: rgba(245, 158, 11, .14);
+            --danger-soft: rgba(220, 38, 38, .15);
+            --sidebar: #08090c;
+            --shadow: 0 1px 2px rgba(0, 0, 0, .4);
+            --shadow-lg: 0 20px 40px rgba(0, 0, 0, .5);
+            color-scheme: dark;
+        }
+        body.tema-oscuro .btn:hover { border-color: #3a4150; }
+        body.tema-oscuro .layout-thumb i { background: #3a4150; }
+        body.tema-oscuro .stanza:hover, body.tema-oscuro .layout-option:hover { border-color: #3b4a6b; }
+        body.tema-oscuro .modal { background: rgba(0, 0, 0, .65); }
+
+        /* ============================================================
+           DISEÑO "TODO EN PANTALLA" (estilo ProPresenter)
+           ============================================================ */
+        .pro-grid { display: none; }
+
+        body.layout-completo .section:not(.section-global) { display: none !important; }
+        body.layout-completo .nav-btn[data-section] { display: none; }
+        body.layout-completo.vista-global .pro-grid { display: none; }
+        body.layout-completo .workspace { padding: 10px; }
+
+        body.layout-completo .pro-grid {
+            display: grid;
+            height: 100%;
+            gap: 10px;
+            grid-template-columns: 240px 120px minmax(0, 1fr) 320px;
+            grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) 270px;
+            grid-template-areas:
+                "songs  stanzas  stanzas  tools"
+                "books  chapters verses   tools"
+                "media  media    media    tools";
+        }
+        /* Pantallas más angostas: las herramientas pasan abajo, junto a multimedia */
+        @media (max-width: 1500px) {
+            body.layout-completo .pro-grid {
+                grid-template-columns: 220px 110px minmax(0, 1fr) minmax(0, 0.9fr);
+                grid-template-areas:
+                    "songs  stanzas  stanzas stanzas"
+                    "books  chapters verses  verses"
+                    "media  media    media   tools";
+            }
+        }
+
+        .pro-grid #col-songs    { grid-area: songs; }
+        .pro-grid #col-stanzas  { grid-area: stanzas; }
+        .pro-grid #col-books    { grid-area: books; }
+        .pro-grid #col-chapters { grid-area: chapters; }
+        .pro-grid #col-verses   { grid-area: verses; }
+        .pro-grid #panel-media  { grid-area: media; }
+        .pro-grid .pro-tools    { grid-area: tools; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; overflow-x: hidden; min-height: 0; }
+        .pro-tools .panel { flex: none; }
+        .pro-tools .note-footer { flex-wrap: wrap; }
+
+        /* Encabezado de canciones: solo "+" para que quepa junto a las pestañas */
+        .pro-grid #col-songs .segmented button { padding: 5px 10px; }
+        .pro-grid #btnNewSong { padding: 5px 9px; font-size: 0; }
+        .pro-grid #btnNewSong::before { content: "+"; font-size: 16px; line-height: 1; }
+
+        /* Versión compacta de los paneles */
+        .pro-grid .panel-header { min-height: 40px; padding: 7px 12px; }
+        .pro-grid .panel-tools { padding: 7px 10px; gap: 6px; }
+        .pro-grid .input { padding: 6px 9px; }
+        .pro-grid .item-lista, .pro-grid .song-row { padding-top: 6px; padding-bottom: 6px; }
+        .pro-grid .group-label { padding-top: 8px; }
+        .pro-grid .chips { grid-template-columns: repeat(auto-fill, minmax(34px, 1fr)); gap: 4px; padding: 8px; }
+        .pro-grid .chip { height: 30px; }
+        .pro-grid .verse { padding: 7px 12px; }
+        .pro-grid .stanza-grid { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; padding: 10px; }
+        .pro-grid .stanza { padding: 9px 11px 10px; font-size: 13px; }
+        .pro-grid .empty { padding: 14px; }
+        .pro-grid .empty .empty-icon { font-size: 20px; }
+
+        .pro-grid .player { padding: 8px 12px; gap: 10px; }
+        .pro-grid .player video { width: 130px; }
+        .pro-grid .player-info { gap: 6px; }
+        .pro-grid .player-row { flex-wrap: wrap; gap: 6px 10px; }
+        .pro-grid .player-row input[type="range"] { min-width: 120px; }
+        .pro-grid .media-group { padding: 0 10px 10px; }
+        .pro-grid .media-group-title { padding: 6px 0; }
+        .pro-grid .media-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+        .pro-grid .media-card .meta { padding: 4px 8px; font-size: 11px; }
+
+        .pro-tools #panel-logos .media-grid { grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); }
+        .pro-tools #panel-logos .meta { display: none; }
+        .pro-tools #panel-logos .panel-scroll { max-height: 150px; }
+        .pro-tools .settings { padding: 10px 12px; gap: 12px; }
+        .pro-tools .pos-picker { max-width: 260px; }
+        .pro-tools #logoPathDisplay { display: none; }
+        .pro-tools .timer-layout { grid-template-columns: 1fr; gap: 12px; padding: 12px; }
+        .pro-tools .timer-display { padding: 10px; }
+        .pro-tools .timer-digits { font-size: 34px; }
+        .pro-tools .timer-display .btn { width: 32px; height: 32px; font-size: 15px; }
+        .pro-tools .notes-grid { grid-template-columns: 1fr; padding: 10px; gap: 8px; }
+        .pro-tools .note-card textarea { min-height: 70px; }
+        .pro-tools #panel-notes .panel-header .hint { display: none; }
+        .pro-grid #col-verses .panel-header .hint { display: none; }
+    </style>
+</head>
+<body>
+
+    <!-- ============ MENÚ LATERAL ============ -->
+    <nav class="sidebar">
+        <button class="nav-btn activo" id="nav-bible" data-section><span class="nav-icon">📖</span>Biblia</button>
+        <button class="nav-btn" id="nav-songs" data-section><span class="nav-icon">🎵</span>Canciones</button>
+        <button class="nav-btn" id="nav-multimedia" data-section><span class="nav-icon">🎬</span>Multimedia</button>
+        <button class="nav-btn" id="nav-logo" data-section><span class="nav-icon">🖼️</span>Logo</button>
+        <button class="nav-btn" id="nav-resources" data-section><span class="nav-icon">🛠️</span>Utilidades</button>
+        <button class="nav-btn" id="nav-pro"><span class="nav-icon">🎛️</span>En vivo</button>
+        <span class="nav-sep"></span>
+        <button class="nav-btn" id="nav-presentations"><span class="nav-icon">📊</span>Presentar</button>
+        <button class="nav-btn" id="nav-web"><span class="nav-icon">🌐</span>Web</button>
+        <span class="grow"></span>
+        <button class="nav-btn" id="nav-settings"><span class="nav-icon">⚙️</span>Ajustes</button>
+    </nav>
+
+    <div class="app">
+        <main class="workspace">
+
+            <!-- ============ BIBLIA ============ -->
+            <section class="section activa" id="sec-bible">
+                <div class="panel" id="col-books">
+                    <div class="panel-header"><h3>Libros</h3></div>
+                    <div class="panel-tools">
+                        <select id="versionSelect" class="input"><option>Cargando versiones…</option></select>
+                        <input type="search" id="bookFilter" class="input" placeholder="Buscar libro…">
+                    </div>
+                    <div id="books-list" class="panel-scroll"></div>
+                </div>
+
+                <div class="panel" id="col-chapters">
+                    <div class="panel-header"><h3 id="chaptersTitle">Capítulos</h3></div>
+                    <div id="chapters-list" class="panel-scroll chips"></div>
+                </div>
+
+                <div class="panel" id="col-verses">
+                    <div class="panel-header">
+                        <div class="segmented" id="verseTabs">
+                            <button data-view="chapter" class="activo" id="versesTitle">Versículos</button>
+                            <button data-view="search" title="Buscar un versículo por su texto">🔍 Buscar</button>
+                            <button data-view="history" title="Versículos proyectados antes">🕘 Historial</button>
+                        </div>
+                        <span class="hint"><span class="kbd">↑</span> <span class="kbd">↓</span> para avanzar</span>
+                    </div>
+                    <div id="verses-list" class="panel-scroll verse-view">
+                        <div class="empty"><span class="empty-icon">📖</span>Elige un libro y un capítulo</div>
+                    </div>
+                    <div id="verseSearchView" class="verse-view" hidden>
+                        <div class="panel-tools">
+                            <input type="search" id="verseSearchInput" class="input" placeholder="Escribe parte del texto, p. ej. «de tal manera amó»…">
+                            <span class="hint" id="verseSearchInfo">Busca en la versión seleccionada. No importan los acentos ni las mayúsculas.</span>
+                        </div>
+                        <div id="verseSearchResults" class="panel-scroll"></div>
+                    </div>
+                    <div id="verseHistoryView" class="verse-view" hidden>
+                        <div class="panel-tools row-tools">
+                            <input type="search" id="verseHistoryFilter" class="input" placeholder="Filtrar historial…">
+                            <button id="btnClearHistory" class="btn btn-sm" title="Borrar todo el historial">Vaciar</button>
+                        </div>
+                        <div id="verseHistoryList" class="panel-scroll"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============ CANCIONES ============ -->
+            <section class="section" id="sec-songs">
+                <div class="panel" id="col-songs">
+                    <div class="panel-header">
+                        <div class="segmented">
+                            <button id="tabAllSongs" class="activo">Canciones</button>
+                            <button id="tabAgendas">Agendas</button>
+                        </div>
+                        <button id="btnNewSong" class="btn btn-primary btn-sm">+ Nueva</button>
+                    </div>
+
+                    <div id="viewAllSongs" class="panel-scroll" style="display: flex; flex-direction: column;">
+                        <div class="panel-tools">
+                            <input type="search" id="searchSong" class="input" placeholder="Buscar por título o letra…">
+                        </div>
+                        <div id="songsList" class="panel-scroll"></div>
+                    </div>
+
+                    <div id="viewAgendas" class="panel-scroll" style="display: none; flex-direction: column;">
+                        <div class="panel-tools">
+                            <div class="row">
+                                <input type="text" id="newAgendaName" class="input grow" placeholder="Nombre de la nueva agenda…">
+                                <button id="btnCreateAgenda" class="btn btn-primary">Crear</button>
+                            </div>
+                        </div>
+                        <div id="agendasList" class="panel-scroll"></div>
+                    </div>
+                </div>
+
+                <div class="panel" id="col-stanzas">
+                    <div class="panel-header">
+                        <h3 id="songTitleDisplay">Letra</h3>
+                        <span class="hint"><span class="kbd">↑</span> <span class="kbd">↓</span> para avanzar</span>
+                    </div>
+                    <div id="stanzas-list" class="panel-scroll stanza-grid">
+                        <div class="empty" style="grid-column: 1 / -1;"><span class="empty-icon">🎵</span>Elige una canción para ver sus estrofas</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============ MULTIMEDIA ============ -->
+            <section class="section" id="sec-media">
+                <div class="panel" id="panel-media">
+                    <div class="panel-header">
+                        <h3>Multimedia</h3>
+                        <button id="btnAddMedia" class="btn btn-primary btn-sm">+ Agregar archivos</button>
+                    </div>
+
+                    <!-- Reproductor: aparece cuando hay un video en pantalla -->
+                    <div id="mediaPlayer" class="player" hidden>
+                        <video id="playerVideo" muted playsinline></video>
+                        <div class="player-info">
+                            <div class="row">
+                                <span class="badge badge-live">EN PANTALLA</span>
+                                <span id="playerTitle" class="player-title grow"></span>
+                            </div>
+                            <div class="player-row">
+                                <button id="btnPlayPause" class="btn btn-icon" title="Pausar / reproducir">⏸</button>
+                                <span id="playerCurrent" class="time">00:00</span>
+                                <input type="range" id="playerSeek" min="0" max="1000" value="0">
+                                <span id="playerDuration" class="time">00:00</span>
+                            </div>
+                            <div class="player-row">
+                                <label class="switch"><input type="checkbox" id="chkVideoLoop" checked><span class="track"></span>Repetir video</label>
+                                <span class="grow"></span>
+                                <button id="btnStopVideo" class="btn btn-sm">Quitar video</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel-scroll">
+                        <div id="mediaEmpty" class="empty">
+                            <span class="empty-icon">🎬</span>
+                            Agrega videos e imágenes para usarlos de fondo.<br>Se ordenan solos por tipo y quedan guardados para la próxima vez.
+                        </div>
+                        <div class="media-group" id="groupVideos" hidden>
+                            <div class="media-group-title">Videos <span id="countVideos" class="badge"></span></div>
+                            <div id="galleryVideos" class="media-grid"></div>
+                        </div>
+                        <div class="media-group" id="groupImages" hidden>
+                            <div class="media-group-title">Imágenes <span id="countImages" class="badge"></span></div>
+                            <div id="galleryImages" class="media-grid"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============ LOGO ============ -->
+            <section class="section" id="sec-logo">
+                <div class="panel" id="panel-logos">
+                    <div class="panel-header">
+                        <h3>Mis logos</h3>
+                        <button id="btnAddLogos" class="btn btn-primary btn-sm">+ Agregar logos</button>
+                    </div>
+                    <div class="panel-scroll">
+                        <div id="logoEmpty" class="empty"><span class="empty-icon">🖼️</span>Agrega uno o varios logos (de preferencia PNG con fondo transparente)<br>y elige cuál proyectar.</div>
+                        <div class="media-group"><div id="logoGallery" class="media-grid"></div></div>
+                    </div>
+                </div>
+
+                <div class="panel" id="panel-logo-settings">
+                    <div class="panel-header">
+                        <h3>Ajustes del logo</h3>
+                        <label class="switch"><input type="checkbox" id="toggleLogo"><span class="track"></span>Mostrar</label>
+                    </div>
+                    <div class="panel-scroll settings">
+                        <div>
+                            <label class="field">Posición en pantalla</label>
+                            <div class="pos-picker" id="logoPosition">
+                                <div class="screen-label">Pantalla</div>
+                                <button class="pos-btn" data-pos="top-left" title="Arriba a la izquierda"><img alt=""></button>
+                                <button class="pos-btn activo" data-pos="top-right" title="Arriba a la derecha"><img alt=""></button>
+                                <button class="pos-btn" data-pos="bottom-left" title="Abajo a la izquierda"><img alt=""></button>
+                                <button class="pos-btn" data-pos="bottom-right" title="Abajo a la derecha"><img alt=""></button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="field">Tamaño <span id="logoSizeVal" class="value">10%</span></label>
+                            <input type="range" id="logoSize" min="3" max="30" value="10">
+                        </div>
+                        <p id="logoPathDisplay" class="hint" style="margin: 0;">Ningún logo seleccionado</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============ UTILIDADES ============ -->
+            <section class="section" id="sec-resources">
+                <div class="panel" id="panel-timer">
+                    <div class="panel-header"><h3>⏳ Cuenta regresiva</h3></div>
+                    <div class="timer-layout">
+                        <div>
+                            <div class="timer-display">
+                                <button class="btn" id="btnTimerMinus" title="Restar 1 minuto">−</button>
+                                <div class="timer-digits">
+                                    <input type="number" id="countdownMinutes" value="5" min="0" max="999" title="Minutos">
+                                    <span>:</span>
+                                    <input type="number" id="countdownSeconds" value="00" min="0" max="59" title="Segundos">
+                                </div>
+                                <button class="btn" id="btnTimerPlus" title="Sumar 1 minuto">+</button>
+                            </div>
+                            <div id="timerStatus" class="timer-status"></div>
+                        </div>
+
+                        <div class="timer-options">
+                            <div>
+                                <label class="field">Tiempo rápido</label>
+                                <div class="preset-grid" id="timerPresets">
+                                    <button class="btn btn-sm" data-min="1">1 min</button>
+                                    <button class="btn btn-sm" data-min="2">2 min</button>
+                                    <button class="btn btn-sm" data-min="3">3 min</button>
+                                    <button class="btn btn-sm" data-min="5">5 min</button>
+                                    <button class="btn btn-sm" data-min="10">10 min</button>
+                                    <button class="btn btn-sm" data-min="15">15 min</button>
+                                    <button class="btn btn-sm" data-min="20">20 min</button>
+                                    <button class="btn btn-sm" data-min="30">30 min</button>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="field">O hasta una hora exacta</label>
+                                <div class="row">
+                                    <input type="time" id="countdownUntil" class="input grow">
+                                    <button id="btnUseUntil" class="btn">Usar</button>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="field">Texto antes del reloj</label>
+                                <input type="text" id="countdownPrefix" class="input" value="Iniciamos en">
+                            </div>
+                            <div class="row">
+                                <button id="btnStartTimer" class="btn btn-primary grow">▶ Iniciar</button>
+                                <button id="btnStopTimer" class="btn grow">⏹ Detener</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel" id="panel-notes">
+                    <div class="panel-header">
+                        <div>
+                            <h3>📌 Notas y textos</h3>
+                            <span class="hint">Avisos, temas, definiciones… El título se proyecta como encabezado. Se guardan automáticamente.</span>
+                        </div>
+                        <button id="btnAddNote" class="btn btn-primary btn-sm">+ Nueva nota</button>
+                    </div>
+                    <div id="notesList" class="notes-grid"></div>
+                </div>
+            </section>
+
+            <!-- ============ PRESENTACIONES ============ -->
+            <section class="section section-global" id="sec-presentations">
+                <div class="panel" id="pres-sidebar">
+                    <div class="panel-header">
+                        <h3>Presentaciones</h3>
+                        <button id="btnNewPresentation" class="btn btn-primary btn-sm">+ Nueva</button>
+                    </div>
+                    <div class="panel-tools">
+                        <select id="presSelect" class="input"></select>
+                        <div class="row">
+                            <button id="btnDeletePresentation" class="btn btn-ghost btn-sm" style="color: var(--danger);">🗑️ Eliminar presentación</button>
+                        </div>
+                    </div>
+                    <div class="panel-tools">
+                        <div class="row">
+                            <h4 class="grow">Diapositivas <span id="slideCount" class="badge"></span></h4>
+                        </div>
+                        <div class="row">
+                            <select id="newSlideLayout" class="input grow" title="Diseño de la nueva diapositiva"></select>
+                            <button id="btnAddSlide" class="btn btn-primary btn-sm" title="Agregar diapositiva">+ Agregar</button>
+                        </div>
+                    </div>
+                    <div id="slideThumbs" class="panel-scroll slide-thumbs"></div>
+                </div>
+
+                <div class="panel" id="pres-editor">
+                    <div class="panel-header">
+                        <input id="presName" class="input title-input grow" placeholder="Nombre de la presentación">
+                        <span id="presSaved" class="hint"></span>
+                        <div class="row" id="presIdleControls">
+                            <button id="btnPresentFromStart" class="btn btn-sm" title="Presentar desde la primera diapositiva">⏮ Desde el inicio</button>
+                            <button id="btnPresent" class="btn btn-primary btn-sm" title="Presentar desde la diapositiva actual">▶ Presentar</button>
+                        </div>
+                        <div class="row" id="presLiveControls" hidden>
+                            <span class="badge badge-live">EN PANTALLA</span>
+                            <button id="btnPrevSlide" class="btn btn-icon btn-sm" title="Anterior (←)">◀</button>
+                            <span id="presCounter" class="counter"></span>
+                            <button id="btnNextSlide" class="btn btn-icon btn-sm" title="Siguiente (→)">▶</button>
+                            <button id="btnStopPresenting" class="btn btn-danger btn-sm">■ Terminar</button>
+                        </div>
+                    </div>
+                    <div class="editor-body">
+                        <div id="editorStage" class="editor-stage">
+                            <div id="slideEditorPreview" class="slide-frame editor-frame"></div>
+                        </div>
+                        <div class="editor-bottom">
+                            <div id="nextSlideBox" class="next-box" hidden>
+                                <label class="field">Siguiente</label>
+                                <div id="nextSlidePreview" class="slide-frame"></div>
+                            </div>
+                            <div class="grow">
+                                <label class="field">Notas del orador <span class="hint" style="text-transform: none; letter-spacing: 0;">· solo tú las ves</span></label>
+                                <textarea id="slideNotes" class="input" rows="3" placeholder="Lo que quieres recordar al presentar esta diapositiva…"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel" id="pres-props">
+                    <div class="panel-header">
+                        <div class="segmented">
+                            <button id="tabSlideProps" class="activo">Diapositiva</button>
+                            <button id="tabStyleProps">Estilo y transición</button>
+                        </div>
+                    </div>
+
+                    <div id="slideProps" class="panel-scroll props">
+                        <div>
+                            <label class="field">Diseño</label>
+                            <div id="layoutPicker" class="layout-picker"></div>
+                        </div>
+                        <div data-para="titulo titulo-contenido seccion dos-columnas imagen-texto imagen cita">
+                            <label class="field" id="lblTitulo">Título</label>
+                            <input id="propTitulo" class="input">
+                        </div>
+                        <div data-para="titulo seccion imagen cita">
+                            <label class="field" id="lblSubtitulo">Subtítulo</label>
+                            <input id="propSubtitulo" class="input">
+                        </div>
+                        <div data-para="titulo-contenido dos-columnas imagen-texto">
+                            <label class="field" id="lblContenido">Puntos (uno por línea)</label>
+                            <textarea id="propContenido" class="input" rows="6"></textarea>
+                        </div>
+                        <div data-para="dos-columnas">
+                            <label class="field">Segunda columna (uno por línea)</label>
+                            <textarea id="propContenido2" class="input" rows="5"></textarea>
+                        </div>
+                        <div data-para="imagen-texto imagen">
+                            <label class="field">Imagen</label>
+                            <div class="row">
+                                <button id="btnSlideImage" class="btn btn-sm grow">🖼️ Elegir imagen…</button>
+                                <button id="btnSlideImageClear" class="btn btn-sm">Quitar</button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="field">Animación de entrada</label>
+                            <select id="propAnimacion" class="input"></select>
+                        </div>
+                        <label class="switch" data-para="titulo-contenido dos-columnas imagen-texto">
+                            <input type="checkbox" id="propPasoAPaso"><span class="track"></span>Mostrar los puntos uno por uno
+                        </label>
+                        <div>
+                            <label class="field">Transición al entrar a esta diapositiva</label>
+                            <select id="propTransicion" class="input"></select>
+                        </div>
+                        <div class="row">
+                            <button id="btnDuplicateSlide" class="btn btn-sm grow">⧉ Duplicar</button>
+                            <button id="btnDeleteSlide" class="btn btn-sm grow" style="color: var(--danger);">🗑️ Eliminar</button>
+                        </div>
+                    </div>
+
+                    <div id="styleProps" class="panel-scroll props" hidden>
+                        <div>
+                            <label class="field">Estilos</label>
+                            <div id="stylePicker" class="style-picker"></div>
+                        </div>
+                        <div>
+                            <label class="field">Guardar este estilo para otras presentaciones</label>
+                            <div class="row">
+                                <input id="newStyleName" class="input grow" placeholder="Nombre del estilo">
+                                <button id="btnSaveStyle" class="btn btn-sm">Guardar</button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="field">Fondo</label>
+                            <div class="segmented" id="bgTypeSel">
+                                <button data-v="color">Color</button>
+                                <button data-v="degradado">Degradado</button>
+                                <button data-v="imagen">Imagen</button>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <input type="color" id="stColor1" title="Color de fondo">
+                            <input type="color" id="stColor2" title="Segundo color" data-fondo="degradado">
+                            <input type="range" id="stAngulo" min="0" max="360" step="5" class="grow" title="Ángulo del degradado" data-fondo="degradado">
+                        </div>
+                        <div data-fondo="imagen">
+                            <div class="row">
+                                <button id="btnStyleImage" class="btn btn-sm grow">🖼️ Imagen de fondo…</button>
+                            </div>
+                            <label class="field" style="margin-top: 8px;">Oscurecer imagen <span id="stOscurecerVal" class="value"></span></label>
+                            <input type="range" id="stOscurecer" min="0" max="0.9" step="0.05">
+                        </div>
+                        <div class="color-row">
+                            <label><input type="color" id="stColTitulo"> Títulos</label>
+                            <label><input type="color" id="stColTexto"> Texto</label>
+                            <label><input type="color" id="stColAcento"> Acento</label>
+                        </div>
+                        <div class="row">
+                            <div class="grow">
+                                <label class="field">Fuente de títulos</label>
+                                <select id="stFuenteTitulo" class="input"></select>
+                            </div>
+                            <div class="grow">
+                                <label class="field">Fuente del texto</label>
+                                <select id="stFuenteTexto" class="input"></select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div>
+                                <label class="field">Alineación</label>
+                                <div class="segmented" id="alignSel">
+                                    <button data-v="izquierda">Izquierda</button>
+                                    <button data-v="centro">Centro</button>
+                                </div>
+                            </div>
+                            <div class="grow">
+                                <label class="field">Viñetas</label>
+                                <select id="stVineta" class="input">
+                                    <option value="punto">• Puntos</option>
+                                    <option value="numero">1. Números</option>
+                                    <option value="ninguna">Sin viñetas</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="field">Tamaño del texto <span id="stEscalaVal" class="value"></span></label>
+                            <input type="range" id="stEscala" min="70" max="130" step="5">
+                        </div>
+                        <div class="settings-group">
+                            <strong>Transición entre diapositivas</strong>
+                            <select id="presTransicion" class="input"></select>
+                            <label class="field">Duración <span id="presDuracionVal" class="value"></span></label>
+                            <input type="range" id="presDuracion" min="200" max="1500" step="100">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============ PÁGINA WEB ============ -->
+            <section class="section section-global" id="sec-web">
+                <div class="panel">
+                    <div class="panel-header web-toolbar">
+                        <button id="webBack" class="btn btn-ghost btn-icon btn-sm" title="Atrás">←</button>
+                        <button id="webForward" class="btn btn-ghost btn-icon btn-sm" title="Adelante">→</button>
+                        <button id="webReload" class="btn btn-ghost btn-icon btn-sm" title="Recargar">⟳</button>
+                        <input id="webUrl" class="input grow" placeholder="Escribe una dirección (ej. wikipedia.org) o lo que quieras buscar…">
+                        <div class="zoom-box" title="Tamaño de la página">
+                            <button id="webZoomOut" class="btn btn-ghost btn-icon btn-sm">−</button>
+                            <span id="webZoomVal">100%</span>
+                            <button id="webZoomIn" class="btn btn-ghost btn-icon btn-sm">+</button>
+                        </div>
+                        <button id="webSaveSite" class="btn btn-ghost btn-icon btn-sm" title="Guardar en sitios">☆</button>
+                        <button id="webProjectBtn" class="btn btn-primary btn-sm" disabled>Proyectar</button>
+                        <button id="webCloseBtn" class="btn btn-sm" disabled>Cerrar</button>
+                    </div>
+                    <div class="web-bar">
+                        <span id="webModeBadge" class="badge">Sin página</span>
+                        <span id="webModeHint" class="hint grow"></span>
+                        <div id="webSites" class="web-sites"></div>
+                    </div>
+                    <div id="webArea" class="web-area">
+                        <div id="webEmpty" class="empty">
+                            <span class="empty-icon">🌐</span>
+                            Escribe una dirección arriba. La página se abre aquí <strong>en privado</strong> para que la prepares;<br>
+                            cuando esté lista, presiona <strong>Proyectar</strong> y podrás seguir usándola desde aquí mientras todos la ven.
+                        </div>
+                        <img id="webScreen" tabindex="0" draggable="false" alt="" hidden>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============ VISTA "TODO EN PANTALLA" ============ -->
+            <!-- Al activarla, los paneles de las secciones se mueven aquí (renderer.js → applyLayout) -->
+            <div id="proGrid" class="pro-grid">
+                <div id="proTools" class="pro-tools"></div>
+            </div>
+        </main>
+
+        <!-- ============ PANEL DERECHO: PANTALLA ============ -->
+        <aside class="screen-panel">
+            <div class="screen-block">
+                <div class="preview" id="preview">
+                    <img id="previewImage" alt="">
+                    <span class="badge badge-live live-tag">EN VIVO</span>
+                    <span class="badge hidden-tag">TEXTO OCULTO</span>
+                    <div class="placeholder"><span style="font-size: 22px;">🖥️</span>Proyección cerrada</div>
+                </div>
+                <button id="openButton" class="btn btn-primary btn-block">Abrir proyección</button>
+                <div id="onAirLabel" class="on-air-label">Pantalla vacía</div>
+                <div class="row">
+                    <button id="toggleTextBtn" class="btn grow" title="Oculta el texto sin quitarlo (T)">Ocultar texto</button>
+                    <button id="clearTextBtn" class="btn btn-danger grow" title="Quitar texto (F2)">Quitar texto</button>
+                    <button id="btnTextSettings" class="btn btn-icon" title="Ajustes de texto">⚙️</button>
+                </div>
+            </div>
+
+            <div class="screen-block">
+                <h4>Texto rápido</h4>
+                <div class="row">
+                    <input type="text" id="textInput" class="input grow" placeholder="Escribe y presiona Enter…">
+                    <button id="sendButton" class="btn">Enviar</button>
+                </div>
+            </div>
+
+            <div class="screen-block">
+                <h4>Fondo</h4>
+                <div class="row">
+                    <input type="color" id="bgColor" value="#000000" title="Color de fondo">
+                    <span id="bgLabel" class="grow hint">Color sólido</span>
+                    <button id="asidePlayPause" class="btn btn-sm btn-icon" title="Pausar / reproducir video" hidden>⏸</button>
+                    <button id="clearBgButton" class="btn btn-sm" title="Quitar fondo (F3)">Quitar</button>
+                </div>
+                <div id="bgFitBlock" hidden>
+                    <label class="field" for="bgFitSelect">Ajuste de la imagen o video</label>
+                    <select id="bgFitSelect" class="input">
+                        <option value="rellenar">Rellenar pantalla (puede recortar)</option>
+                        <option value="ajustar">Ajustar sin recortar (con barras)</option>
+                        <option value="estirar">Estirar (puede deformar)</option>
+                        <option value="ancho">Ajustar al ancho</option>
+                        <option value="alto">Ajustar al alto</option>
+                        <option value="original">Tamaño original</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="field">Oscurecer fondo <span id="dimmerValue" class="value">0%</span></label>
+                    <input type="range" id="dimmerSlider" min="0" max="0.9" step="0.05" value="0">
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- ============ MODAL: AJUSTES ============ -->
+    <div id="modalSettings" class="modal">
+        <div class="modal-card" style="width: 640px;">
+            <div class="modal-head"><h3>⚙️ Ajustes</h3></div>
+            <div class="modal-body">
+                <div>
+                    <label class="field">Diseño del panel de control</label>
+                    <div class="layout-options">
+                        <button class="layout-option" data-layout="secciones">
+                            <div class="layout-thumb thumb-secciones">
+                                <span class="t-side"></span>
+                                <span class="t-main"><i></i><i></i><i></i></span>
+                                <span class="t-aside"></span>
+                            </div>
+                            <strong>Por secciones</strong>
+                            <span class="hint">Una sección a la vez (Biblia, Canciones, Multimedia…). Más espacio para cada una.</span>
+                        </button>
+                        <button class="layout-option" data-layout="completo">
+                            <div class="layout-thumb thumb-completo">
+                                <span class="t-side"></span>
+                                <span class="t-main"><i></i><i></i><i></i><i></i><i></i><i></i></span>
+                                <span class="t-aside"></span>
+                            </div>
+                            <strong>Todo en pantalla</strong>
+                            <span class="hint">Estilo ProPresenter: canciones, Biblia, multimedia y herramientas visibles a la vez.</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="field">Tema</label>
+                    <div class="segmented" id="themeSelector">
+                        <button data-theme="claro">☀️ Claro</button>
+                        <button data-theme="oscuro">🌙 Oscuro</button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="field">Atajos de teclado</label>
+                    <dl class="shortcuts">
+                        <dt><span class="kbd">T</span></dt><dd>Ocultar / mostrar el texto (sin quitarlo)</dd>
+                        <dt><span class="kbd">F1</span></dt><dd>Limpiar todo: texto, fondo y logo</dd>
+                        <dt><span class="kbd">F2</span></dt><dd>Quitar texto</dd>
+                        <dt><span class="kbd">F3</span></dt><dd>Quitar fondo</dd>
+                        <dt><span class="kbd">F4</span></dt><dd>Mostrar / ocultar logo</dd>
+                        <dt><span class="kbd">↑</span> <span class="kbd">↓</span> <span class="kbd">RePág</span> <span class="kbd">AvPág</span></dt><dd>Anterior / siguiente (versículo, estrofa, diapositiva)</dd>
+                        <dt><span class="kbd">Inicio</span> <span class="kbd">Fin</span></dt><dd>Primero / último de la lista</dd>
+                        <dt><span class="kbd">Espacio</span></dt><dd>Siguiente paso de la presentación</dd>
+                        <dt><span class="kbd">Ctrl</span> + <span class="kbd">1</span>…<span class="kbd">8</span></dt><dd>Ir a cada sección del menú, en orden</dd>
+                        <dt><span class="kbd">Ctrl</span> + <span class="kbd">F</span></dt><dd>Buscar (versículos o canciones)</dd>
+                        <dt><span class="kbd">Ctrl</span> + <span class="kbd">P</span></dt><dd>Abrir la proyección</dd>
+                        <dt><span class="kbd">F11</span></dt><dd>Pantalla completa de la proyección</dd>
+                        <dt><span class="kbd">Ctrl</span> + <span class="kbd">+</span> <span class="kbd">−</span> <span class="kbd">0</span></dt><dd>Zoom del panel</dd>
+                        <dt><span class="kbd">Ctrl</span> + <span class="kbd">,</span></dt><dd>Abrir estos ajustes</dd>
+                        <dt><span class="kbd">Esc</span></dt><dd>Cerrar ventanas emergentes</dd>
+                    </dl>
+                </div>
+
+                <p class="hint" style="margin: 0;">Los cambios se aplican al instante y se recuerdan la próxima vez que abras la aplicación.</p>
+            </div>
+            <div class="modal-foot">
+                <button id="btnCloseAppSettings" class="btn btn-primary">Listo</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ MODAL: NUEVA CANCIÓN ============ -->
+    <div id="modalAddSong" class="modal">
+        <div class="modal-card" style="width: 620px;">
+            <div class="modal-head"><h3>Nueva canción</h3></div>
+            <div class="modal-body">
+                <input type="text" id="songTitleInput" class="input" placeholder="Título de la canción">
+                <textarea id="songLyricsInput" class="input" rows="14" placeholder="Escribe la letra aquí.&#10;Deja una línea en blanco (Enter dos veces) para separar las estrofas."></textarea>
+            </div>
+            <div class="modal-foot">
+                <button id="btnCancelSong" class="btn">Cancelar</button>
+                <button id="btnSaveSong" class="btn btn-primary">Guardar canción</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ MODAL: EDITAR / ELIMINAR CANCIÓN ============ -->
+    <div id="modalEditSong" class="modal">
+        <div class="modal-card" style="width: 620px;">
+            <div class="modal-head"><h3>Editar canción</h3></div>
+            <div class="modal-body">
+                <input type="hidden" id="editSongId">
+                <input type="text" id="editSongTitle" class="input" placeholder="Título de la canción">
+                <textarea id="editSongLyrics" class="input" rows="14" placeholder="Letra (separa las estrofas con una línea en blanco)"></textarea>
+            </div>
+            <div class="modal-foot">
+                <button id="btnDeleteSong" class="btn btn-ghost" style="color: var(--danger);">🗑️ Eliminar</button>
+                <span class="spacer"></span>
+                <button id="btnCancelEdit" class="btn">Cancelar</button>
+                <button id="btnUpdateSong" class="btn btn-primary">Guardar cambios</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ MODAL: AGREGAR A AGENDA ============ -->
+    <div id="modalAddToAgenda" class="modal">
+        <div class="modal-card small">
+            <div class="modal-head"><h3>Agregar a agenda</h3></div>
+            <div class="modal-body">
+                <p style="margin: 0; color: var(--muted);">Elige la agenda para <strong id="agendaSongTitleName" style="color: var(--text);"></strong></p>
+                <input type="hidden" id="agendaSongId">
+                <select id="agendaSelectBox" class="input"></select>
+            </div>
+            <div class="modal-foot">
+                <button id="btnCancelAgenda" class="btn">Cancelar</button>
+                <button id="btnConfirmAddToAgenda" class="btn btn-primary">Agregar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ MODAL: AJUSTES DE TEXTO ============ -->
+    <div id="modalTextSettings" class="modal">
+        <div class="modal-card small">
+            <div class="modal-head"><h3>Ajustes de texto</h3></div>
+            <div class="modal-body">
+                <div class="settings-group">
+                    <label class="switch"><input type="checkbox" id="chkAutoFit"><span class="track"></span><strong>Ajuste automático</strong></label>
+                    <div>
+                        <label class="field">Tamaño manual <span id="fontSizeValue" class="value">6</span></label>
+                        <input type="range" id="fontSizeSlider" min="2" max="20" value="6" step="0.5">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="grow">
+                        <label class="field">Ubicación</label>
+                        <select id="textAlignSelect" class="input">
+                            <option value="flex-start">Arriba</option>
+                            <option value="center" selected>Medio</option>
+                            <option value="flex-end">Abajo</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="field">Color</label>
+                        <input type="color" id="textColorPicker" value="#ffffff">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="field">Borde negro de las letras</label>
+                    <input type="range" id="textShadowSlider" min="0" max="10" value="4">
+                </div>
+
+                <div class="settings-group">
+                    <strong>Transiciones al cambiar el texto</strong>
+                    <div class="trans-grid">
+                        <label class="field" for="transBiblia">📖 Biblia</label>
+                        <select id="transBiblia" class="input" data-categoria="biblia"></select>
+                        <label class="field" for="transCanciones">🎵 Canciones</label>
+                        <select id="transCanciones" class="input" data-categoria="canciones"></select>
+                        <label class="field" for="transNotas">📌 Notas y textos</label>
+                        <select id="transNotas" class="input" data-categoria="notas"></select>
+                    </div>
+                    <div>
+                        <label class="field">Duración <span id="transDuracionVal" class="value"></span></label>
+                        <input type="range" id="transDuracion" min="200" max="1500" step="100">
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <strong>Cita bíblica / título</strong>
+                    <div>
+                        <label class="field">Tamaño <span id="citationSizeValue" class="value">40</span></label>
+                        <input type="range" id="citationSizeSlider" min="15" max="150" value="40">
+                    </div>
+                    <div>
+                        <label class="field">Alineación</label>
+                        <select id="citationAlignSelect" class="input">
+                            <option value="left">Izquierda</option>
+                            <option value="center" selected>Centro</option>
+                            <option value="right">Derecha</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button id="btnCloseSettings" class="btn btn-primary">Listo</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="./slide-renderer.js"></script>
+    <script src="./renderer.js"></script>
+    <script src="./presentaciones.js"></script>
+    <script src="./web.js"></script>
+</body>
+</html>
