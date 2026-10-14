@@ -2,5 +2,3 @@ node_modules/
 dist/
 DOCUMENTACION.md
 Biblias/
-userdata.db
-bibles.sqlite
